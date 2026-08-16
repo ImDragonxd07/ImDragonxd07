@@ -87,7 +87,7 @@
       <g transform="translate(645, 70)" class="glow-pulse" style="animation-delay:0.8999999999999999s">
         <rect x="0" y="0" width="189" height="70" rx="12"
               fill="url(#cardGrad)" stroke="#30363d" stroke-width="1"/>
-        <text x="94.5" y="30" text-anchor="middle" class="stat-value" filter="url(#glow)">79</text>
+        <text x="94.5" y="30" text-anchor="middle" class="stat-value" filter="url(#glow)">80</text>
         <text x="94.5" y="52" text-anchor="middle" class="stat-label">Contributions (yr)</text>
       </g>
 
