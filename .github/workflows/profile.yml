@@ -1,10 +1,10 @@
-name: Update Profile Dashboard
+name: Generate Animated Profile
 
 on:
+  workflow_dispatch:
+
   schedule:
     - cron: "0 */6 * * *"
-
-  workflow_dispatch:
 
   push:
     branches:
@@ -14,688 +14,1093 @@ permissions:
   contents: write
 
 jobs:
-  update-dashboard:
+  generate-profile:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Generate dashboard
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pillow requests
+
+      - name: Generate animated dashboard
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_USERNAME: ImDragonxd07
         run: |
-          python3 <<'PY'
+
+          python <<'PY'
+
           import os
-          import json
-          import urllib.request
-          import urllib.parse
+          import math
+          import requests
+
+          from PIL import Image
+          from PIL import ImageDraw
+          from PIL import ImageFont
           from pathlib import Path
 
-          username = os.environ["GITHUB_USERNAME"]
-          token = os.environ["GITHUB_TOKEN"]
 
-          headers = {
-              "Authorization": f"Bearer {token}",
+          # ============================================================
+          # CONFIG
+          # ============================================================
+
+          USERNAME = os.environ["GITHUB_USERNAME"]
+          TOKEN = os.environ["GITHUB_TOKEN"]
+
+          WIDTH = 1200
+          HEIGHT = 760
+
+          FRAMES = 24
+          FRAME_DURATION = 90
+
+          API = "https://api.github.com"
+
+          HEADERS = {
+              "Authorization": f"Bearer {TOKEN}",
               "Accept": "application/vnd.github+json",
               "X-GitHub-Api-Version": "2022-11-28"
           }
 
-          def github(url):
-              req = urllib.request.Request(url, headers=headers)
-              with urllib.request.urlopen(req) as response:
-                  return json.loads(response.read())
 
-          user = github(f"https://api.github.com/users/{username}")
+          # ============================================================
+          # FONTS
+          # ============================================================
+
+          FONT_REGULAR = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
+          FONT_BOLD = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
+
+          def font(size, bold=False):
+              return ImageFont.truetype(
+                  FONT_BOLD if bold else FONT_REGULAR,
+                  size
+              )
+
+
+          # ============================================================
+          # GITHUB API
+          # ============================================================
+
+          def github(url, params=None):
+
+              response = requests.get(
+                  url,
+                  headers=HEADERS,
+                  params=params,
+                  timeout=30
+              )
+
+              response.raise_for_status()
+
+              return response.json()
+
+
+          print("Getting GitHub profile...")
+
+          user = github(
+              f"{API}/users/{USERNAME}"
+          )
+
+
+          # ============================================================
+          # REPOSITORIES
+          # ============================================================
 
           repos = []
+
           page = 1
 
           while True:
-              data = github(
-                  f"https://api.github.com/users/{username}/repos"
-                  f"?per_page=100&page={page}&type=owner&sort=pushed"
+
+              batch = github(
+                  f"{API}/users/{USERNAME}/repos",
+                  {
+                      "per_page": 100,
+                      "page": page,
+                      "type": "owner",
+                      "sort": "updated"
+                  }
               )
 
-              if not data:
+              if not batch:
                   break
 
-              repos.extend(data)
+              repos.extend(batch)
 
-              if len(data) < 100:
+              if len(batch) < 100:
                   break
 
               page += 1
 
-          repos.sort(
-              key=lambda r: (
-                  r.get("stargazers_count", 0),
-                  r.get("forks_count", 0),
-                  r.get("watchers_count", 0)
-              ),
+
+          print(f"Found {len(repos)} repositories.")
+
+
+          # Don't show forks in the project dashboard.
+
+          owned_repos = [
+              r for r in repos
+              if not r.get("fork", False)
+          ]
+
+
+          # ============================================================
+          # STATS
+          # ============================================================
+
+          repo_count = len(owned_repos)
+
+          total_stars = sum(
+              r.get("stargazers_count", 0)
+              for r in owned_repos
+          )
+
+          total_forks = sum(
+              r.get("forks_count", 0)
+              for r in owned_repos
+          )
+
+          followers = user.get("followers", 0)
+
+
+          # ============================================================
+          # PROJECT RANKING
+          #
+          # Combines stars + forks + recent activity.
+          # This means the dashboard automatically chooses
+          # interesting projects instead of requiring a manual list.
+          # ============================================================
+
+          def project_score(repo):
+
+              stars = repo.get("stargazers_count", 0)
+              forks = repo.get("forks_count", 0)
+              watchers = repo.get("watchers_count", 0)
+
+              return (
+                  stars * 10 +
+                  forks * 5 +
+                  watchers
+              )
+
+
+          owned_repos.sort(
+              key=project_score,
               reverse=True
           )
 
-          top_repos = repos[:6]
 
-          total_stars = sum(r.get("stargazers_count", 0) for r in repos)
-          total_forks = sum(r.get("forks_count", 0) for r in repos)
+          projects = owned_repos[:6]
 
-          languages = {}
 
-          for repo in repos:
+          # ============================================================
+          # LANGUAGES
+          # ============================================================
+
+          language_counts = {}
+
+          for repo in owned_repos:
+
               language = repo.get("language")
 
               if language:
-                  languages[language] = languages.get(language, 0) + 1
+
+                  language_counts[language] = (
+                      language_counts.get(language, 0) + 1
+                  )
+
 
           languages = sorted(
-              languages.items(),
+              language_counts.items(),
               key=lambda x: x[1],
               reverse=True
-          )[:6]
+          )[:5]
 
-          total_languages = sum(x[1] for x in languages) or 1
 
-          language_rows = ""
+          # ============================================================
+          # CONTRIBUTION DATA
+          #
+          # GitHub's public events API is used here so no personal
+          # access token is required.
+          # ============================================================
 
-          language_colors = [
-              "#00d9ff",
-              "#7c3aed",
-              "#22c55e",
-              "#f59e0b",
-              "#ef4444",
-              "#ec4899"
-          ]
+          events = []
 
-          for i, (language, count) in enumerate(languages):
-              percent = count / total_languages * 100
-              color = language_colors[i % len(language_colors)]
+          page = 1
 
-              language_rows += f"""
-              <g transform="translate(0,{i * 30})">
-                <circle cx="8" cy="8" r="6" fill="{color}"/>
-                <text x="24" y="13"
-                      fill="#c9d1d9"
-                      font-size="13"
-                      font-family="Arial, sans-serif">
-                  {language}
-                </text>
+          while page <= 3:
 
-                <text x="250" y="13"
-                      fill="#777"
-                      font-size="12"
-                      text-anchor="end"
-                      font-family="Arial, sans-serif">
-                  {percent:.0f}%
-                </text>
+              try:
 
-                <rect x="270"
-                      y="1"
-                      width="210"
-                      height="10"
-                      rx="5"
-                      fill="#ffffff"
-                      fill-opacity=".06"/>
+                  batch = github(
+                      f"{API}/users/{USERNAME}/events/public",
+                      {
+                          "per_page": 100,
+                          "page": page
+                      }
+                  )
 
-                <rect x="270"
-                      y="1"
-                      width="{210 * percent / 100:.1f}"
-                      height="10"
-                      rx="5"
-                      fill="{color}"/>
-              </g>
-              """
+              except Exception:
 
-          repo_cards = ""
+                  break
 
-          for i, repo in enumerate(top_repos):
-              x = 30 + (i % 2) * 550
-              y = 40 + (i // 2) * 105
+              if not batch:
+                  break
 
-              name = repo["name"]
-              stars = repo.get("stargazers_count", 0)
-              forks = repo.get("forks_count", 0)
-              description = repo.get("description") or ""
+              events.extend(batch)
 
-              description = description.replace("&", "&amp;")
-              description = description.replace("<", "&lt;")
-              description = description.replace(">", "&gt;")
+              if len(batch) < 100:
+                  break
 
-              if len(description) > 65:
-                  description = description[:62] + "..."
+              page += 1
 
-              repo_cards += f"""
-              <g transform="translate({x},{y})">
 
-                <rect width="510"
-                      height="85"
-                      rx="14"
-                      fill="#ffffff"
-                      fill-opacity=".035"
-                      stroke="#ffffff"
-                      stroke-opacity=".07"/>
+          # Count recent contribution activity by day.
 
-                <circle cx="24"
-                        cy="26"
-                        r="7"
-                        fill="#00d9ff"/>
+          from datetime import datetime, timezone
 
-                <text x="42"
-                      y="31"
-                      fill="#ffffff"
-                      font-size="16"
-                      font-weight="bold"
-                      font-family="Arial, sans-serif">
-                  {name}
-                </text>
+          contribution_days = {}
 
-                <text x="42"
-                      y="55"
-                      fill="#8b949e"
-                      font-size="12"
-                      font-family="Arial, sans-serif">
-                  {description}
-                </text>
+          for event in events:
 
-                <text x="42"
-                      y="75"
-                      fill="#7c3aed"
-                      font-size="11"
-                      font-family="Arial, sans-serif">
-                  ★ {stars}   ◇ {forks}
-                </text>
+              created = event.get("created_at")
 
-              </g>
-              """
+              if not created:
+                  continue
 
-          svg = f"""<svg xmlns="http://www.w3.org/2000/svg"
-          width="1200"
-          height="850"
-          viewBox="0 0 1200 850">
-          
-          <defs>
-          
-          <!-- Moving background -->
-          
-          <linearGradient id="bg"
-          x1="0%" y1="0%"
-          x2="100%" y2="100%">
-          
-          <stop offset="0%" stop-color="#03050b">
-              <animate
-                  attributeName="stop-color"
-                  values="#03050b;#09051a;#03050b"
-                  dur="12s"
-                  repeatCount="indefinite"/>
-          </stop>
-          
-          <stop offset="50%" stop-color="#10082a">
-              <animate
-                  attributeName="stop-color"
-                  values="#10082a;#061a24;#10082a"
-                  dur="12s"
-                  repeatCount="indefinite"/>
-          </stop>
-          
-          <stop offset="100%" stop-color="#020810">
-              <animate
-                  attributeName="stop-color"
-                  values="#020810;#11051f;#020810"
-                  dur="12s"
-                  repeatCount="indefinite"/>
-          </stop>
-          
-          </linearGradient>
-          
-          
-          <!-- Moving neon -->
-          
-          <linearGradient id="neon"
-          x1="0%"
-          y1="0%"
-          x2="100%"
-          y2="0%">
-          
-          <stop offset="0%" stop-color="#00d9ff">
-              <animate
-                  attributeName="offset"
-                  values="0%;20%;0%"
-                  dur="5s"
-                  repeatCount="indefinite"/>
-          </stop>
-          
-          <stop offset="50%" stop-color="#7c3aed">
-              <animate
-                  attributeName="offset"
-                  values="50%;70%;50%"
-                  dur="5s"
-                  repeatCount="indefinite"/>
-          </stop>
-          
-          <stop offset="100%" stop-color="#00d9ff">
-              <animate
-                  attributeName="offset"
-                  values="100%;80%;100%"
-                  dur="5s"
-                  repeatCount="indefinite"/>
-          </stop>
-          
-          </linearGradient>
-          
-          
-          <radialGradient id="glow">
-          
-          <stop offset="0%" stop-color="#00d9ff" stop-opacity=".25"/>
-          <stop offset="45%" stop-color="#7c3aed" stop-opacity=".1"/>
-          <stop offset="100%" stop-color="#000" stop-opacity="0"/>
-          
-          </radialGradient>
-          
-          
-          <filter id="blur">
-          
-          <feGaussianBlur stdDeviation="35"/>
-          
-          </filter>
-          
-          
-          <filter id="softGlow">
-          
-          <feGaussianBlur stdDeviation="8"/>
-          
-          </filter>
-          
-          </defs>
-          
-          
-          <!-- BACKGROUND -->
-          
-          <rect
-          width="1200"
-          height="850"
-          rx="24"
-          fill="url(#bg)"/>
-          
-          
-          <!-- MOVING GLOWS -->
-          
-          <circle
-          cx="150"
-          cy="120"
-          r="280"
-          fill="url(#glow)"
-          filter="url(#blur)">
-          
-          <animate
-          attributeName="cx"
-          values="150;350;150"
-          dur="14s"
-          repeatCount="indefinite"/>
-          
-          <animate
-          attributeName="cy"
-          values="120;250;120"
-          dur="11s"
-          repeatCount="indefinite"/>
-          
-          </circle>
-          
-          
-          <circle
-          cx="1050"
-          cy="700"
-          r="330"
-          fill="url(#glow)"
-          filter="url(#blur)">
-          
-          <animate
-          attributeName="cx"
-          values="1050;850;1050"
-          dur="16s"
-          repeatCount="indefinite"/>
-          
-          <animate
-          attributeName="cy"
-          values="700;550;700"
-          dur="13s"
-          repeatCount="indefinite"/>
-          
-          </circle>
-          
-          
-          <!-- MOVING WAVES -->
-          
-          <g
-          fill="none"
-          stroke-linecap="round">
-          
-          <path
-          d="M-100 250
-          C150 30 300 400 520 180
-          S900 30 1300 230"
-          
-          stroke="url(#neon)"
-          stroke-width="2"
-          opacity=".7">
-          
-          <animate
-          attributeName="d"
-          
-          values="
-          M-100 250 C150 30 300 400 520 180 S900 30 1300 230;
-          M-100 180 C120 390 330 40 560 230 S920 350 1300 140;
-          M-100 250 C150 30 300 400 520 180 S900 30 1300 230"
-          
-          dur="12s"
-          repeatCount="indefinite"/>
-          
-          </path>
-          
-          
-          <path
-          d="M-100 650
-          C200 430 330 760 580 540
-          S950 400 1300 620"
-          
-          stroke="#7c3aed"
-          stroke-width="2"
-          opacity=".35">
-          
-          <animate
-          attributeName="d"
-          
-          values="
-          M-100 650 C200 430 330 760 580 540 S950 400 1300 620;
-          M-100 580 C180 760 360 420 620 600 S980 720 1300 520;
-          M-100 650 C200 430 330 760 580 540 S950 400 1300 620"
-          
-          dur="15s"
-          repeatCount="indefinite"/>
-          
-          </path>
-          
-          </g>
-          
-          
-          <!-- PARTICLES -->
-          
-          <g fill="#ffffff">
-          
-          <circle cx="120" cy="180" r="1.5">
-          <animate attributeName="cy"
-          values="180;130;180"
-          dur="5s"
-          repeatCount="indefinite"/>
-          </circle>
-          
-          <circle cx="280" cy="600" r="1">
-          <animate attributeName="cy"
-          values="600;540;600"
-          dur="7s"
-          repeatCount="indefinite"/>
-          </circle>
-          
-          <circle cx="470" cy="110" r="1.5">
-          <animate attributeName="cy"
-          values="110;70;110"
-          dur="6s"
-          repeatCount="indefinite"/>
-          </circle>
-          
-          <circle cx="720" cy="680" r="1">
-          <animate attributeName="cy"
-          values="680;620;680"
-          dur="8s"
-          repeatCount="indefinite"/>
-          </circle>
-          
-          <circle cx="930" cy="140" r="1.5">
-          <animate attributeName="cy"
-          values="140;90;140"
-          dur="6s"
-          repeatCount="indefinite"/>
-          </circle>
-          
-          <circle cx="1080" cy="520" r="1">
-          <animate attributeName="cy"
-          values="520;460;520"
-          dur="7s"
-          repeatCount="indefinite"/>
-          </circle>
-          
-          </g>
-          
-          
-          <!-- HEADER -->
-          
-          <text
-          x="60"
-          y="70"
-          fill="#ffffff"
-          font-size="26"
-          font-weight="bold"
-          font-family="Arial, sans-serif">
-          
-          GitHub Activity
-          
-          </text>
-          
-          
-          <rect
-          x="60"
-          y="88"
-          width="1080"
-          height="2"
-          rx="1"
-          fill="url(#neon)"
-          opacity=".7">
-          
-          
-          <animate
-          attributeName="opacity"
-          values=".35;.9;.35"
-          dur="3s"
-          repeatCount="indefinite"/>
-          
-          </rect>
-          
-          
-          <!-- STAT CARDS -->
-          
-          <g>
-          
-          <rect x="60" y="125"
-          width="250" height="90"
-          rx="16"
-          fill="#ffffff"
-          fill-opacity=".035"
-          stroke="#ffffff"
-          stroke-opacity=".08"/>
-          
-          <text x="85" y="157"
-          fill="#8b949e"
-          font-size="11"
-          font-family="Arial">
-          
-          REPOSITORIES
-          
-          </text>
-          
-          <text x="85" y="195"
-          fill="#00d9ff"
-          font-size="29"
-          font-weight="bold"
-          font-family="Arial">
-          
-          {len(repos)}
-          
-          </text>
-          
-          
-          <rect x="330" y="125"
-          width="250" height="90"
-          rx="16"
-          fill="#ffffff"
-          fill-opacity=".035"
-          stroke="#ffffff"
-          stroke-opacity=".08"/>
-          
-          <text x="355" y="157"
-          fill="#8b949e"
-          font-size="11"
-          font-family="Arial">
-          
-          STARS
-          
-          </text>
-          
-          <text x="355" y="195"
-          fill="#7c3aed"
-          font-size="29"
-          font-weight="bold"
-          font-family="Arial">
-          
-          {total_stars}
-          
-          </text>
-          
-          
-          <rect x="600" y="125"
-          width="250" height="90"
-          rx="16"
-          fill="#ffffff"
-          fill-opacity=".035"
-          stroke="#ffffff"
-          stroke-opacity=".08"/>
-          
-          <text x="625" y="157"
-          fill="#8b949e"
-          font-size="11"
-          font-family="Arial">
-          
-          FORKS
-          
-          </text>
-          
-          <text x="625" y="195"
-          fill="#00d9ff"
-          font-size="29"
-          font-weight="bold"
-          font-family="Arial">
-          
-          {total_forks}
-          
-          </text>
-          
-          
-          <rect x="870" y="125"
-          width="270" height="90"
-          rx="16"
-          fill="#ffffff"
-          fill-opacity=".035"
-          stroke="#ffffff"
-          stroke-opacity=".08"/>
-          
-          <text x="895" y="157"
-          fill="#8b949e"
-          font-size="11"
-          font-family="Arial">
-          
-          FOLLOWERS
-          
-          </text>
-          
-          <text x="895" y="195"
-          fill="#7c3aed"
-          font-size="29"
-          font-weight="bold"
-          font-family="Arial">
-          
-          {user.get("followers", 0)}
-          
-          </text>
-          
-          </g>
-          
-          
-          <!-- PROJECTS -->
-          
-          <text
-          x="60"
-          y="265"
-          fill="#ffffff"
-          font-size="20"
-          font-weight="bold"
-          font-family="Arial">
-          
-          Most Starred Projects
-          
-          </text>
-          
-          
-          {repo_cards}
-          
-          
-          <!-- LANGUAGE SECTION -->
-          
-          <text
-          x="60"
-          y="680"
-          fill="#ffffff"
-          font-size="20"
-          font-weight="bold"
-          font-family="Arial">
-          
-          Languages
-          
-          </text>
-          
-          
-          <g transform="translate(60,700)">
-          
-          {language_rows}
-          
-          </g>
-          
-          
-          <!-- BORDER GLOW -->
-          
-          <rect
-          x="1"
-          y="1"
-          width="1198"
-          height="848"
-          rx="24"
-          fill="none"
-          stroke="url(#neon)"
-          stroke-opacity=".2"/>
-          
-          </svg>
-          """
+              try:
 
-          Path("assets").mkdir(exist_ok=True)
+                  dt = datetime.fromisoformat(
+                      created.replace("Z", "+00:00")
+                  )
 
-          Path("assets/dashboard.svg").write_text(
-              svg,
-              encoding="utf-8"
+                  day = dt.date().isoformat()
+
+                  contribution_days[day] = (
+                      contribution_days.get(day, 0) + 1
+                  )
+
+              except Exception:
+
+                  pass
+
+
+          # ============================================================
+          # COLORS
+          # ============================================================
+
+          BG = (5, 6, 13)
+
+          CYAN = (0, 217, 255)
+
+          PURPLE = (124, 58, 237)
+
+          WHITE = (245, 247, 255)
+
+          MUTED = (139, 148, 158)
+
+          CARD = (255, 255, 255, 9)
+
+          BORDER = (255, 255, 255, 18)
+
+
+          # ============================================================
+          # HELPERS
+          # ============================================================
+
+          def lerp(a, b, t):
+
+              return int(a + (b - a) * t)
+
+
+          def gradient_color(t):
+
+              t = t % 1.0
+
+              if t < .5:
+
+                  p = t * 2
+
+                  return (
+                      lerp(CYAN[0], PURPLE[0], p),
+                      lerp(CYAN[1], PURPLE[1], p),
+                      lerp(CYAN[2], PURPLE[2], p)
+                  )
+
+              else:
+
+                  p = (t - .5) * 2
+
+                  return (
+                      lerp(PURPLE[0], CYAN[0], p),
+                      lerp(PURPLE[1], CYAN[1], p),
+                      lerp(PURPLE[2], CYAN[2], p)
+                  )
+
+
+          def rounded_card(draw, box):
+
+              draw.rounded_rectangle(
+                  box,
+                  radius=16,
+                  fill=(255, 255, 255, 7),
+                  outline=(255, 255, 255, 18),
+                  width=1
+              )
+
+
+          def truncate(text, max_chars):
+
+              if not text:
+
+                  return ""
+
+              text = str(text)
+
+              if len(text) <= max_chars:
+
+                  return text
+
+              return text[:max_chars - 3] + "..."
+
+
+          # ============================================================
+          # PARTICLES
+          # ============================================================
+
+          particles = []
+
+          for i in range(80):
+
+              particles.append({
+                  "x": (i * 173) % WIDTH,
+                  "y": (i * 97) % HEIGHT,
+                  "speed": .15 + ((i * 13) % 20) / 100,
+                  "size": 1 + (i % 3)
+              })
+
+
+          # ============================================================
+          # GENERATE FRAMES
+          # ============================================================
+
+          frames = []
+
+          for frame_number in range(FRAMES):
+
+              print(
+                  f"Rendering frame "
+                  f"{frame_number + 1}/{FRAMES}"
+              )
+
+              t = frame_number / FRAMES
+
+              image = Image.new(
+                  "RGBA",
+                  (WIDTH, HEIGHT),
+                  BG + (255,)
+              )
+
+              draw = ImageDraw.Draw(
+                  image,
+                  "RGBA"
+              )
+
+
+              # --------------------------------------------------------
+              # MOVING GRADIENT BACKGROUND
+              # --------------------------------------------------------
+
+              for y in range(0, HEIGHT, 8):
+
+                  for x in range(0, WIDTH, 8):
+
+                      phase = (
+                          x / WIDTH * .45 +
+                          y / HEIGHT * .2 +
+                          t
+                      )
+
+                      color = gradient_color(
+                          phase
+                      )
+
+                      alpha = 13
+
+                      draw.rectangle(
+                          (
+                              x,
+                              y,
+                              x + 8,
+                              y + 8
+                          ),
+                          fill=(
+                              color[0],
+                              color[1],
+                              color[2],
+                              alpha
+                          )
+                      )
+
+
+              # --------------------------------------------------------
+              # LARGE MOVING GLOW
+              # --------------------------------------------------------
+
+              glow = Image.new(
+                  "RGBA",
+                  (WIDTH, HEIGHT),
+                  (0, 0, 0, 0)
+              )
+
+              glow_draw = ImageDraw.Draw(
+                  glow,
+                  "RGBA"
+              )
+
+              gx = (
+                  WIDTH / 2 +
+                  math.sin(t * math.pi * 2) * 350
+              )
+
+              gy = (
+                  HEIGHT / 2 +
+                  math.cos(t * math.pi * 2) * 160
+              )
+
+              for radius in range(300, 20, -20):
+
+                  alpha = int(
+                      2 + (300 - radius) / 300 * 4
+                  )
+
+                  glow_draw.ellipse(
+                      (
+                          gx - radius,
+                          gy - radius,
+                          gx + radius,
+                          gy + radius
+                      ),
+                      fill=(
+                          0,
+                          217,
+                          255,
+                          alpha
+                      )
+                  )
+
+              glow = glow.filter(
+                  __import__("PIL").ImageFilter.GaussianBlur(35)
+              )
+
+              image.alpha_composite(glow)
+
+
+              draw = ImageDraw.Draw(
+                  image,
+                  "RGBA"
+              )
+
+
+              # --------------------------------------------------------
+              # MOVING NEON WAVES
+              # --------------------------------------------------------
+
+              points = []
+
+              for x in range(-40, WIDTH + 40, 10):
+
+                  normalized = x / WIDTH
+
+                  y = (
+                      190
+                      + math.sin(
+                          normalized * math.pi * 3
+                          + t * math.pi * 2
+                      ) * 55
+                      + math.sin(
+                          normalized * math.pi * 7
+                          - t * math.pi * 4
+                      ) * 18
+                  )
+
+                  points.append((x, y))
+
+
+              for offset in range(22, 0, -2):
+
+                  alpha = int(
+                      2 + (22 - offset) * 1.2
+                  )
+
+                  draw.line(
+                      [
+                          (x, y + offset)
+                          for x, y in points
+                      ],
+                      fill=(
+                          CYAN[0],
+                          CYAN[1],
+                          CYAN[2],
+                          alpha
+                      ),
+                      width=2
+                  )
+
+
+              draw.line(
+                  points,
+                  fill=(
+                      0,
+                      217,
+                      255,
+                      100
+                  ),
+                  width=2
+              )
+
+
+              # --------------------------------------------------------
+              # PARTICLES
+              # --------------------------------------------------------
+
+              for p in particles:
+
+                  px = (
+                      p["x"] +
+                      frame_number * p["speed"] * 8
+                  ) % WIDTH
+
+                  py = p["y"]
+
+                  alpha = int(
+                      40 +
+                      30 *
+                      math.sin(
+                          t * math.pi * 2 +
+                          p["x"]
+                      )
+                  )
+
+                  draw.ellipse(
+                      (
+                          px - p["size"],
+                          py - p["size"],
+                          px + p["size"],
+                          py + p["size"]
+                      ),
+                      fill=(
+                          255,
+                          255,
+                          255,
+                          alpha
+                      )
+                  )
+
+
+              # ========================================================
+              # DASHBOARD CONTENT
+              # ========================================================
+
+
+              # --------------------------------------------------------
+              # HEADER
+              # --------------------------------------------------------
+
+              draw.text(
+                  (50, 35),
+                  "GITHUB ACTIVITY",
+                  fill=WHITE,
+                  font=font(26, True)
+              )
+
+              # animated accent line
+
+              line_offset = int(
+                  (math.sin(t * math.pi * 2) + 1)
+                  * 200
+              )
+
+              for x in range(50, 1150):
+
+                  c = gradient_color(
+                      (x + line_offset) / 800
+                  )
+
+                  draw.line(
+                      (
+                          x,
+                          78,
+                          x + 1,
+                          78
+                      ),
+                      fill=c + (120,),
+                      width=2
+                  )
+
+
+              # --------------------------------------------------------
+              # STAT CARDS
+              # --------------------------------------------------------
+
+              stats = [
+                  ("REPOSITORIES", repo_count, CYAN),
+                  ("STARS", total_stars, PURPLE),
+                  ("FORKS", total_forks, CYAN),
+                  ("FOLLOWERS", followers, PURPLE)
+              ]
+
+
+              card_width = 255
+              card_gap = 20
+              start_x = 50
+              stat_y = 105
+
+
+              for i, (label, value, color) in enumerate(stats):
+
+                  x = (
+                      start_x +
+                      i * (card_width + card_gap)
+                  )
+
+                  rounded_card(
+                      draw,
+                      (
+                          x,
+                          stat_y,
+                          x + card_width,
+                          stat_y + 90
+                      )
+                  )
+
+                  draw.text(
+                      (x + 20, stat_y + 17),
+                      label,
+                      fill=MUTED,
+                      font=font(11, True)
+                  )
+
+                  draw.text(
+                      (x + 20, stat_y + 43),
+                      str(value),
+                      fill=color,
+                      font=font(27, True)
+                  )
+
+
+              # --------------------------------------------------------
+              # PROJECT DASHBOARD
+              # --------------------------------------------------------
+
+              draw.text(
+                  (50, 225),
+                  "PROJECTS",
+                  fill=WHITE,
+                  font=font(19, True)
+              )
+
+
+              project_x = 50
+              project_y = 260
+
+              project_width = 540
+              project_height = 82
+
+              for i, repo in enumerate(projects):
+
+                  row = i // 2
+                  col = i % 2
+
+                  x = (
+                      project_x +
+                      col * 560
+                  )
+
+                  y = (
+                      project_y +
+                      row * 95
+                  )
+
+
+                  rounded_card(
+                      draw,
+                      (
+                          x,
+                          y,
+                          x + project_width,
+                          y + project_height
+                      )
+                  )
+
+
+                  name = truncate(
+                      repo.get("name", ""),
+                      28
+                  )
+
+                  description = truncate(
+                      repo.get("description", ""),
+                      62
+                  )
+
+
+                  draw.ellipse(
+                      (
+                          x + 18,
+                          y + 18,
+                          x + 30,
+                          y + 30
+                      ),
+                      fill=gradient_color(
+                          t + i * .1
+                      )
+                  )
+
+
+                  draw.text(
+                      (x + 42, y + 14),
+                      name,
+                      fill=WHITE,
+                      font=font(15, True)
+                  )
+
+
+                  if description:
+
+                      draw.text(
+                          (x + 42, y + 38),
+                          description,
+                          fill=MUTED,
+                          font=font(10)
+                      )
+
+
+                  stars = repo.get(
+                      "stargazers_count",
+                      0
+                  )
+
+                  forks = repo.get(
+                      "forks_count",
+                      0
+                  )
+
+
+                  draw.text(
+                      (x + 42, y + 60),
+                      f"★ {stars}    ◇ {forks}",
+                      fill=gradient_color(
+                          t + i * .08
+                      ),
+                      font=font(10, True)
+                  )
+
+
+              # --------------------------------------------------------
+              # BOTTOM DASHBOARD
+              # --------------------------------------------------------
+
+              bottom_y = 570
+
+
+              # Languages
+
+              rounded_card(
+                  draw,
+                  (
+                      50,
+                      bottom_y,
+                      560,
+                      720
+                  )
+              )
+
+
+              draw.text(
+                  (75, bottom_y + 20),
+                  "LANGUAGES",
+                  fill=WHITE,
+                  font=font(16, True)
+              )
+
+
+              language_total = max(
+                  sum(
+                      count
+                      for _, count in languages
+                  ),
+                  1
+              )
+
+
+              for i, (language, count) in enumerate(
+                  languages
+              ):
+
+                  y = (
+                      bottom_y +
+                      58 +
+                      i * 25
+                  )
+
+                  percentage = (
+                      count /
+                      language_total
+                  )
+
+                  color = gradient_color(
+                      i / max(len(languages), 1)
+                  )
+
+
+                  draw.ellipse(
+                      (
+                          75,
+                          y,
+                          85,
+                          y + 10
+                      ),
+                      fill=color
+                  )
+
+
+                  draw.text(
+                      (95, y - 3),
+                      language,
+                      fill=WHITE,
+                      font=font(10)
+                  )
+
+
+                  draw.rounded_rectangle(
+                      (
+                          190,
+                          y,
+                          520,
+                          y + 10
+                      ),
+                      radius=5,
+                      fill=(255, 255, 255, 12)
+                  )
+
+
+                  draw.rounded_rectangle(
+                      (
+                          190,
+                          y,
+                          190 +
+                          int(
+                              330 *
+                              percentage
+                          ),
+                          y + 10
+                      ),
+                      radius=5,
+                      fill=color
+                  )
+
+
+              # --------------------------------------------------------
+              # CONTRIBUTION ACTIVITY
+              # --------------------------------------------------------
+
+              rounded_card(
+                  draw,
+                  (
+                      580,
+                      bottom_y,
+                      1150,
+                      720
+                  )
+              )
+
+
+              draw.text(
+                  (605, bottom_y + 20),
+                  "RECENT ACTIVITY",
+                  fill=WHITE,
+                  font=font(16, True)
+              )
+
+
+              # Contribution heatmap
+
+              cell = 13
+
+              gap = 3
+
+              start_x = 605
+
+              start_y = bottom_y + 55
+
+
+              # Last 12 weeks
+
+              from datetime import date, timedelta
+
+              today = date.today()
+
+              start = (
+                  today -
+                  timedelta(days=83)
+              )
+
+
+              for day_index in range(84):
+
+                  current = (
+                      start +
+                      timedelta(days=day_index)
+                  )
+
+                  week = day_index // 7
+
+                  weekday = current.weekday()
+
+                  count = contribution_days.get(
+                      current.isoformat(),
+                      0
+                  )
+
+
+                  intensity = min(
+                      count / 5,
+                      1
+                  )
+
+
+                  if count == 0:
+
+                      color = (
+                          255,
+                          255,
+                          255,
+                          10
+                      )
+
+                  else:
+
+                      base = gradient_color(
+                          current.toordinal() / 20
+                      )
+
+                      alpha = int(
+                          40 +
+                          intensity * 180
+                      )
+
+                      color = (
+                          base[0],
+                          base[1],
+                          base[2],
+                          alpha
+                      )
+
+
+                  x = (
+                      start_x +
+                      week *
+                      (cell + gap)
+                  )
+
+                  y = (
+                      start_y +
+                      weekday *
+                      (cell + gap)
+                  )
+
+
+                  draw.rounded_rectangle(
+                      (
+                          x,
+                          y,
+                          x + cell,
+                          y + cell
+                      ),
+                      radius=3,
+                      fill=color
+                  )
+
+
+              # --------------------------------------------------------
+              # SAVE FRAME
+              # --------------------------------------------------------
+
+              image = image.convert(
+                  "RGB"
+              )
+
+              frames.append(image)
+
+
+          # ============================================================
+          # SAVE GIF
+          # ============================================================
+
+          Path("assets").mkdir(
+              exist_ok=True
           )
 
-          print("Dashboard generated.")
+
+          output = (
+              "assets/dashboard.gif"
+          )
+
+
+          frames[0].save(
+              output,
+              save_all=True,
+              append_images=frames[1:],
+              duration=FRAME_DURATION,
+              loop=0,
+              optimize=True,
+              disposal=2
+          )
+
+
+          print(
+              f"Created {output}"
+          )
+
+          print(
+              f"Frames: {len(frames)}"
+          )
+
+          print(
+              f"Size: {Path(output).stat().st_size / 1024 / 1024:.2f} MB"
+          )
 
           PY
 
       - name: Commit dashboard
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          git add assets/dashboard.svg
+          git config user.name "github-actions[bot]"
+
+          git config user.email \
+            "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add assets/dashboard.gif
 
           if git diff --cached --quiet; then
-            echo "No changes."
+
+            echo "No dashboard changes."
+
           else
-            git commit -m "Update profile dashboard"
+
+            git commit \
+              -m "Update animated profile dashboard"
+
             git push
+
           fi
