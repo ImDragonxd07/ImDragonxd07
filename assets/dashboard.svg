@@ -144,7 +144,7 @@
           <rect x="-70" y="0" width="70" height="82" fill="url(#sweepGrad)"
                 class="card-sweep" style="animation-delay:1.80s"/>
         </g>
-        <text x="101" y="36" text-anchor="middle" class="stat-value" filter="url(#softGlow)">81</text>
+        <text x="101" y="36" text-anchor="middle" class="stat-value" filter="url(#softGlow)">82</text>
         <text x="101" y="60" text-anchor="middle" class="stat-label">Contributions / yr</text>
       </g>
 
