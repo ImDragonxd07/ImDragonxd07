@@ -1,4 +1,4 @@
-name: Generate Animated Profile
+name: Update Profile Dashboard
 
 on:
   workflow_dispatch:
@@ -14,12 +14,11 @@ permissions:
   contents: write
 
 jobs:
-  generate-profile:
+  dashboard:
     runs-on: ubuntu-latest
 
     steps:
-
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Setup Python
@@ -32,7 +31,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install pillow requests
 
-      - name: Generate animated dashboard
+      - name: Generate dashboard
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_USERNAME: ImDragonxd07
@@ -44,11 +43,12 @@ jobs:
           import math
           import requests
 
+          from datetime import datetime, timezone
+
           from PIL import Image
           from PIL import ImageDraw
           from PIL import ImageFont
           from PIL import ImageFilter
-          from pathlib import Path
 
 
           # ============================================================
@@ -59,10 +59,10 @@ jobs:
           TOKEN = os.environ["GITHUB_TOKEN"]
 
           WIDTH = 1200
-          HEIGHT = 760
+          HEIGHT = 720
 
-          FRAMES = 24
-          FRAME_DURATION = 90
+          FRAME_COUNT = 24
+          FRAME_DURATION = 100
 
           API = "https://api.github.com"
 
@@ -74,15 +74,43 @@ jobs:
 
 
           # ============================================================
+          # COLORS
+          # ============================================================
+
+          BACKGROUND = (7, 9, 13)
+
+          CARD = (14, 17, 23)
+
+          CARD_BORDER = (255, 255, 255, 13)
+
+          WHITE = (232, 237, 243)
+
+          MUTED = (139, 148, 158)
+
+          CYAN = (0, 210, 255)
+
+          PURPLE = (124, 58, 237)
+
+
+          # ============================================================
           # FONTS
           # ============================================================
 
-          FONT_REGULAR = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
-          FONT_BOLD = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
+          REGULAR_FONT = (
+              "/usr/share/fonts/truetype/dejavu/"
+              "DejaVuSans.ttf"
+          )
+
+          BOLD_FONT = (
+              "/usr/share/fonts/truetype/dejavu/"
+              "DejaVuSans-Bold.ttf"
+          )
+
 
           def font(size, bold=False):
+
               return ImageFont.truetype(
-                  FONT_BOLD if bold else FONT_REGULAR,
+                  BOLD_FONT if bold else REGULAR_FONT,
                   size
               )
 
@@ -105,7 +133,8 @@ jobs:
               return response.json()
 
 
-          print("Getting GitHub profile...")
+          print("Fetching GitHub data...")
+
 
           user = github(
               f"{API}/users/{USERNAME}"
@@ -143,64 +172,62 @@ jobs:
               page += 1
 
 
-          print(f"Found {len(repos)} repositories.")
-
-
-          # Don't show forks in the project dashboard.
-
-          owned_repos = [
-              r for r in repos
-              if not r.get("fork", False)
+          repos = [
+              repo
+              for repo in repos
+              if not repo.get("fork", False)
           ]
 
 
-          # ============================================================
-          # STATS
-          # ============================================================
-
-          repo_count = len(owned_repos)
-
-          total_stars = sum(
-              r.get("stargazers_count", 0)
-              for r in owned_repos
+          print(
+              f"Found {len(repos)} repositories."
           )
 
-          total_forks = sum(
-              r.get("forks_count", 0)
-              for r in owned_repos
+
+          # ============================================================
+          # BASIC STATS
+          # ============================================================
+
+          repository_count = len(repos)
+
+          stars = sum(
+              repo.get("stargazers_count", 0)
+              for repo in repos
           )
 
-          followers = user.get("followers", 0)
+          forks = sum(
+              repo.get("forks_count", 0)
+              for repo in repos
+          )
+
+          followers = user.get(
+              "followers",
+              0
+          )
 
 
           # ============================================================
           # PROJECT RANKING
-          #
-          # Combines stars + forks + recent activity.
-          # This means the dashboard automatically chooses
-          # interesting projects instead of requiring a manual list.
           # ============================================================
 
           def project_score(repo):
 
-              stars = repo.get("stargazers_count", 0)
-              forks = repo.get("forks_count", 0)
-              watchers = repo.get("watchers_count", 0)
-
               return (
-                  stars * 10 +
-                  forks * 5 +
-                  watchers
+                  repo.get("stargazers_count", 0) * 10
+                  +
+                  repo.get("forks_count", 0) * 5
+                  +
+                  repo.get("watchers_count", 0)
               )
 
 
-          owned_repos.sort(
+          repos.sort(
               key=project_score,
               reverse=True
           )
 
 
-          projects = owned_repos[:6]
+          projects = repos[:4]
 
 
           # ============================================================
@@ -209,169 +236,140 @@ jobs:
 
           language_counts = {}
 
-          for repo in owned_repos:
+          for repo in repos:
 
-              language = repo.get("language")
+              language = repo.get(
+                  "language"
+              )
 
               if language:
 
                   language_counts[language] = (
-                      language_counts.get(language, 0) + 1
+                      language_counts.get(
+                          language,
+                          0
+                      ) + 1
                   )
 
 
           languages = sorted(
               language_counts.items(),
-              key=lambda x: x[1],
+              key=lambda item: item[1],
               reverse=True
-          )[:5]
+          )[:4]
+
+
+          language_total = max(
+              sum(
+                  count
+                  for _, count in languages
+              ),
+              1
+          )
 
 
           # ============================================================
-          # CONTRIBUTION DATA
-          #
-          # GitHub's public events API is used here so no personal
-          # access token is required.
+          # RECENT ACTIVITY
           # ============================================================
 
-          events = []
+          activity = []
 
-          page = 1
+          try:
 
-          while page <= 3:
+              events = github(
+                  f"{API}/users/{USERNAME}/events/public",
+                  {
+                      "per_page": 100
+                  }
+              )
 
-              try:
+              for event in events:
 
-                  batch = github(
-                      f"{API}/users/{USERNAME}/events/public",
-                      {
-                          "per_page": 100,
-                          "page": page
-                      }
+                  created = event.get(
+                      "created_at"
                   )
 
-              except Exception:
+                  if not created:
+                      continue
 
-                  break
+                  try:
 
-              if not batch:
-                  break
+                      dt = datetime.fromisoformat(
+                          created.replace(
+                              "Z",
+                              "+00:00"
+                          )
+                      )
 
-              events.extend(batch)
+                      activity.append(
+                          dt
+                      )
 
-              if len(batch) < 100:
-                  break
+                  except Exception:
 
-              page += 1
+                      pass
 
+          except Exception:
 
-          # Count recent contribution activity by day.
-
-          from datetime import datetime, timezone
-
-          contribution_days = {}
-
-          for event in events:
-
-              created = event.get("created_at")
-
-              if not created:
-                  continue
-
-              try:
-
-                  dt = datetime.fromisoformat(
-                      created.replace("Z", "+00:00")
-                  )
-
-                  day = dt.date().isoformat()
-
-                  contribution_days[day] = (
-                      contribution_days.get(day, 0) + 1
-                  )
-
-              except Exception:
-
-                  pass
-
-
-          # ============================================================
-          # COLORS
-          # ============================================================
-
-          BG = (5, 6, 13)
-
-          CYAN = (0, 217, 255)
-
-          PURPLE = (124, 58, 237)
-
-          WHITE = (245, 247, 255)
-
-          MUTED = (139, 148, 158)
-
-          CARD = (255, 255, 255, 9)
-
-          BORDER = (255, 255, 255, 18)
+              activity = []
 
 
           # ============================================================
           # HELPERS
           # ============================================================
 
-          def lerp(a, b, t):
-
-              return int(a + (b - a) * t)
-
-
-          def gradient_color(t):
-
-              t = t % 1.0
-
-              if t < .5:
-
-                  p = t * 2
-
-                  return (
-                      lerp(CYAN[0], PURPLE[0], p),
-                      lerp(CYAN[1], PURPLE[1], p),
-                      lerp(CYAN[2], PURPLE[2], p)
-                  )
-
-              else:
-
-                  p = (t - .5) * 2
-
-                  return (
-                      lerp(PURPLE[0], CYAN[0], p),
-                      lerp(PURPLE[1], CYAN[1], p),
-                      lerp(PURPLE[2], CYAN[2], p)
-                  )
-
-
-          def rounded_card(draw, box):
+          def rounded_box(
+              draw,
+              x1,
+              y1,
+              x2,
+              y2,
+              radius=12
+          ):
 
               draw.rounded_rectangle(
-                  box,
-                  radius=16,
-                  fill=(255, 255, 255, 7),
-                  outline=(255, 255, 255, 18),
+                  (
+                      x1,
+                      y1,
+                      x2,
+                      y2
+                  ),
+                  radius=radius,
+                  fill=CARD,
+                  outline=CARD_BORDER,
                   width=1
               )
 
 
-          def truncate(text, max_chars):
+          def truncate(
+              text,
+              length
+          ):
 
               if not text:
-
                   return ""
 
               text = str(text)
 
-              if len(text) <= max_chars:
-
+              if len(text) <= length:
                   return text
 
-              return text[:max_chars - 3] + "..."
+              return (
+                  text[:length - 3]
+                  + "..."
+              )
+
+
+          def mix(a, b, amount):
+
+              return tuple(
+                  int(
+                      a[i] +
+                      (b[i] - a[i])
+                      * amount
+                  )
+                  for i in range(3)
+              )
 
 
           # ============================================================
@@ -380,14 +378,15 @@ jobs:
 
           particles = []
 
-          for i in range(80):
+          for i in range(18):
 
-              particles.append({
-                  "x": (i * 173) % WIDTH,
-                  "y": (i * 97) % HEIGHT,
-                  "speed": .15 + ((i * 13) % 20) / 100,
-                  "size": 1 + (i % 3)
-              })
+              particles.append(
+                  (
+                      (i * 97) % WIDTH,
+                      (i * 157) % HEIGHT,
+                      0.2 + (i % 4) * 0.05
+                  )
+              )
 
 
           # ============================================================
@@ -396,591 +395,660 @@ jobs:
 
           frames = []
 
-          for frame_number in range(FRAMES):
+
+          for frame in range(
+              FRAME_COUNT
+          ):
 
               print(
-                  f"Rendering frame "
-                  f"{frame_number + 1}/{FRAMES}"
+                  f"Rendering "
+                  f"{frame + 1}/"
+                  f"{FRAME_COUNT}"
               )
 
-              t = frame_number / FRAMES
+
+              t = (
+                  frame /
+                  FRAME_COUNT
+              )
+
 
               image = Image.new(
-                  "RGBA",
-                  (WIDTH, HEIGHT),
-                  BG + (255,)
+                  "RGB",
+                  (
+                      WIDTH,
+                      HEIGHT
+                  ),
+                  BACKGROUND
               )
 
-              draw = ImageDraw.Draw(
-                  image,
-                  "RGBA"
-              )
-
 
               # --------------------------------------------------------
-              # MOVING GRADIENT BACKGROUND
-              # --------------------------------------------------------
-
-              for y in range(0, HEIGHT, 8):
-
-                  for x in range(0, WIDTH, 8):
-
-                      phase = (
-                          x / WIDTH * .45 +
-                          y / HEIGHT * .2 +
-                          t
-                      )
-
-                      color = gradient_color(
-                          phase
-                      )
-
-                      alpha = 13
-
-                      draw.rectangle(
-                          (
-                              x,
-                              y,
-                              x + 8,
-                              y + 8
-                          ),
-                          fill=(
-                              color[0],
-                              color[1],
-                              color[2],
-                              alpha
-                          )
-                      )
-
-
-              # --------------------------------------------------------
-              # LARGE MOVING GLOW
+              # SUBTLE BACKGROUND GLOW
               # --------------------------------------------------------
 
               glow = Image.new(
                   "RGBA",
-                  (WIDTH, HEIGHT),
-                  (0, 0, 0, 0)
+                  (
+                      WIDTH,
+                      HEIGHT
+                  ),
+                  (
+                      0,
+                      0,
+                      0,
+                      0
+                  )
               )
+
 
               glow_draw = ImageDraw.Draw(
-                  glow,
-                  "RGBA"
+                  glow
               )
+
 
               gx = (
-                  WIDTH / 2 +
-                  math.sin(t * math.pi * 2) * 350
+                  WIDTH * 0.15
+                  +
+                  math.sin(
+                      t * math.pi * 2
+                  ) * 170
               )
+
 
               gy = (
-                  HEIGHT / 2 +
-                  math.cos(t * math.pi * 2) * 160
+                  HEIGHT * 0.15
+                  +
+                  math.cos(
+                      t * math.pi * 2
+                  ) * 70
               )
 
-              for radius in range(300, 20, -20):
 
-                  alpha = int(
-                      2 + (300 - radius) / 300 * 4
+              glow_draw.ellipse(
+                  (
+                      gx - 230,
+                      gy - 230,
+                      gx + 230,
+                      gy + 230
+                  ),
+                  fill=(
+                      CYAN[0],
+                      CYAN[1],
+                      CYAN[2],
+                      18
                   )
+              )
 
-                  glow_draw.ellipse(
-                      (
-                          gx - radius,
-                          gy - radius,
-                          gx + radius,
-                          gy + radius
-                      ),
-                      fill=(
-                          0,
-                          217,
-                          255,
-                          alpha
-                      )
+
+              gx2 = (
+                  WIDTH * 0.85
+                  +
+                  math.cos(
+                      t * math.pi * 2
+                  ) * 160
+              )
+
+
+              gy2 = (
+                  HEIGHT * 0.8
+                  +
+                  math.sin(
+                      t * math.pi * 2
+                  ) * 90
+              )
+
+
+              glow_draw.ellipse(
+                  (
+                      gx2 - 260,
+                      gy2 - 260,
+                      gx2 + 260,
+                      gy2 + 260
+                  ),
+                  fill=(
+                      PURPLE[0],
+                      PURPLE[1],
+                      PURPLE[2],
+                      15
                   )
+              )
+
 
               glow = glow.filter(
-                  ImageFilter.GaussianBlur(35)
+                  ImageFilter.GaussianBlur(
+                      70
+                  )
               )
 
-              image.alpha_composite(glow)
+
+              image = Image.alpha_composite(
+                  image.convert("RGBA"),
+                  glow
+              )
 
 
               draw = ImageDraw.Draw(
-                  image,
-                  "RGBA"
+                  image
               )
 
 
               # --------------------------------------------------------
-              # MOVING NEON WAVES
+              # SUBTLE PARTICLES
               # --------------------------------------------------------
 
-              points = []
-
-              for x in range(-40, WIDTH + 40, 10):
-
-                  normalized = x / WIDTH
-
-                  y = (
-                      190
-                      + math.sin(
-                          normalized * math.pi * 3
-                          + t * math.pi * 2
-                      ) * 55
-                      + math.sin(
-                          normalized * math.pi * 7
-                          - t * math.pi * 4
-                      ) * 18
-                  )
-
-                  points.append((x, y))
-
-
-              for offset in range(22, 0, -2):
-
-                  alpha = int(
-                      2 + (22 - offset) * 1.2
-                  )
-
-                  draw.line(
-                      [
-                          (x, y + offset)
-                          for x, y in points
-                      ],
-                      fill=(
-                          CYAN[0],
-                          CYAN[1],
-                          CYAN[2],
-                          alpha
-                      ),
-                      width=2
-                  )
-
-
-              draw.line(
-                  points,
-                  fill=(
-                      0,
-                      217,
-                      255,
-                      100
-                  ),
-                  width=2
-              )
-
-
-              # --------------------------------------------------------
-              # PARTICLES
-              # --------------------------------------------------------
-
-              for p in particles:
+              for x, y, speed in particles:
 
                   px = (
-                      p["x"] +
-                      frame_number * p["speed"] * 8
+                      x
+                      +
+                      frame * speed * 5
                   ) % WIDTH
 
-                  py = p["y"]
 
-                  alpha = int(
-                      40 +
-                      30 *
+                  py = (
+                      y
+                      +
                       math.sin(
-                          t * math.pi * 2 +
-                          p["x"]
-                      )
+                          t * math.pi * 2
+                          + x
+                      ) * 3
                   )
+
 
                   draw.ellipse(
                       (
-                          px - p["size"],
-                          py - p["size"],
-                          px + p["size"],
-                          py + p["size"]
+                          px,
+                          py,
+                          px + 1,
+                          py + 1
                       ),
                       fill=(
                           255,
                           255,
                           255,
-                          alpha
+                          35
                       )
                   )
 
 
               # ========================================================
-              # DASHBOARD CONTENT
+              # HEADER
               # ========================================================
 
+              draw.text(
+                  (
+                      55,
+                      35
+                  ),
+                  "GITHUB",
+                  fill=WHITE,
+                  font=font(
+                      25,
+                      True
+                  )
+              )
 
-              # --------------------------------------------------------
-              # HEADER
-              # --------------------------------------------------------
 
               draw.text(
-                  (50, 35),
-                  "GITHUB ACTIVITY",
-                  fill=WHITE,
-                  font=font(26, True)
+                  (
+                      55,
+                      69
+                  ),
+                  USERNAME,
+                  fill=MUTED,
+                  font=font(12)
               )
 
-              # animated accent line
 
-              line_offset = int(
-                  (math.sin(t * math.pi * 2) + 1)
-                  * 200
-              )
+              # very subtle moving accent
 
-              for x in range(50, 1150):
-
-                  c = gradient_color(
-                      (x + line_offset) / 800
-                  )
-
-                  draw.line(
+              accent_position = int(
+                  55
+                  +
+                  (
                       (
-                          x,
-                          78,
-                          x + 1,
-                          78
-                      ),
-                      fill=c + (120,),
-                      width=2
+                          math.sin(
+                              t * math.pi * 2
+                          )
+                          + 1
+                      )
+                      / 2
                   )
+                  * 1090
+              )
 
 
-              # --------------------------------------------------------
-              # STAT CARDS
-              # --------------------------------------------------------
+              draw.rounded_rectangle(
+                  (
+                      55,
+                      94,
+                      1145,
+                      96
+                  ),
+                  radius=1,
+                  fill=(
+                      255,
+                      255,
+                      255,
+                      12
+                  )
+              )
 
-              stats = [
-                  ("REPOSITORIES", repo_count, CYAN),
-                  ("STARS", total_stars, PURPLE),
-                  ("FORKS", total_forks, CYAN),
-                  ("FOLLOWERS", followers, PURPLE)
+
+              draw.rounded_rectangle(
+                  (
+                      accent_position - 80,
+                      94,
+                      accent_position + 80,
+                      96
+                  ),
+                  radius=1,
+                  fill=CYAN
+              )
+
+
+              # ========================================================
+              # STATS
+              # ========================================================
+
+              stat_values = [
+                  (
+                      "REPOSITORIES",
+                      repository_count
+                  ),
+                  (
+                      "STARS",
+                      stars
+                  ),
+                  (
+                      "FORKS",
+                      forks
+                  ),
+                  (
+                      "FOLLOWERS",
+                      followers
+                  )
               ]
 
 
-              card_width = 255
-              card_gap = 20
-              start_x = 50
-              stat_y = 105
+              stat_width = 255
 
-
-              for i, (label, value, color) in enumerate(stats):
+              for i, (
+                  label,
+                  value
+              ) in enumerate(
+                  stat_values
+              ):
 
                   x = (
-                      start_x +
-                      i * (card_width + card_gap)
+                      55
+                      +
+                      i * 275
                   )
 
-                  rounded_card(
+
+                  rounded_box(
                       draw,
+                      x,
+                      120,
+                      x + stat_width,
+                      195
+                  )
+
+
+                  draw.text(
                       (
-                          x,
-                          stat_y,
-                          x + card_width,
-                          stat_y + 90
+                          x + 20,
+                          140
+                      ),
+                      label,
+                      fill=MUTED,
+                      font=font(
+                          10,
+                          True
                       )
                   )
 
-                  draw.text(
-                      (x + 20, stat_y + 17),
-                      label,
-                      fill=MUTED,
-                      font=font(11, True)
-                  )
 
                   draw.text(
-                      (x + 20, stat_y + 43),
+                      (
+                          x + 20,
+                          160
+                      ),
                       str(value),
-                      fill=color,
-                      font=font(27, True)
+                      fill=(
+                          CYAN
+                          if i % 2 == 0
+                          else PURPLE
+                      ),
+                      font=font(
+                          24,
+                          True
+                      )
                   )
 
 
-              # --------------------------------------------------------
-              # PROJECT DASHBOARD
-              # --------------------------------------------------------
+              # ========================================================
+              # PROJECTS
+              # ========================================================
 
               draw.text(
-                  (50, 225),
+                  (
+                      55,
+                      225
+                  ),
                   "PROJECTS",
                   fill=WHITE,
-                  font=font(19, True)
+                  font=font(
+                      16,
+                      True
+                  )
               )
 
 
-              project_x = 50
-              project_y = 260
+              for i, repo in enumerate(
+                  projects
+              ):
 
-              project_width = 540
-              project_height = 82
-
-              for i, repo in enumerate(projects):
+                  column = i % 2
 
                   row = i // 2
-                  col = i % 2
+
 
                   x = (
-                      project_x +
-                      col * 560
+                      55
+                      +
+                      column * 550
                   )
+
 
                   y = (
-                      project_y +
-                      row * 95
+                      255
+                      +
+                      row * 105
                   )
 
 
-                  rounded_card(
+                  rounded_box(
                       draw,
-                      (
-                          x,
-                          y,
-                          x + project_width,
-                          y + project_height
-                      )
+                      x,
+                      y,
+                      x + 530,
+                      y + 88
                   )
 
 
                   name = truncate(
-                      repo.get("name", ""),
-                      28
+                      repo.get(
+                          "name",
+                          ""
+                      ),
+                      30
                   )
+
 
                   description = truncate(
-                      repo.get("description", ""),
-                      62
-                  )
-
-
-                  draw.ellipse(
-                      (
-                          x + 18,
-                          y + 18,
-                          x + 30,
-                          y + 30
+                      repo.get(
+                          "description",
+                          ""
                       ),
-                      fill=gradient_color(
-                          t + i * .1
-                      )
+                      58
                   )
 
 
                   draw.text(
-                      (x + 42, y + 14),
+                      (
+                          x + 20,
+                          y + 14
+                      ),
                       name,
                       fill=WHITE,
-                      font=font(15, True)
+                      font=font(
+                          14,
+                          True
+                      )
                   )
 
 
                   if description:
 
                       draw.text(
-                          (x + 42, y + 38),
+                          (
+                              x + 20,
+                              y + 38
+                          ),
                           description,
                           fill=MUTED,
-                          font=font(10)
+                          font=font(
+                              9
+                          )
                       )
 
 
-                  stars = repo.get(
-                      "stargazers_count",
-                      0
-                  )
-
-                  forks = repo.get(
-                      "forks_count",
-                      0
-                  )
-
-
                   draw.text(
-                      (x + 42, y + 60),
-                      f"★ {stars}    ◇ {forks}",
-                      fill=gradient_color(
-                          t + i * .08
+                      (
+                          x + 20,
+                          y + 63
                       ),
-                      font=font(10, True)
+                      (
+                          "★ "
+                          + str(
+                              repo.get(
+                                  "stargazers_count",
+                                  0
+                              )
+                          )
+                          +
+                          "    "
+                          "◇ "
+                          + str(
+                              repo.get(
+                                  "forks_count",
+                                  0
+                              )
+                          )
+                      ),
+                      fill=CYAN,
+                      font=font(
+                          9,
+                          True
+                      )
                   )
 
 
-              # --------------------------------------------------------
-              # BOTTOM DASHBOARD
-              # --------------------------------------------------------
+              # ========================================================
+              # LANGUAGES
+              # ========================================================
 
-              bottom_y = 570
-
-
-              # Languages
-
-              rounded_card(
+              rounded_box(
                   draw,
-                  (
-                      50,
-                      bottom_y,
-                      560,
-                      720
-                  )
+                  55,
+                  480,
+                  565,
+                  675
               )
 
 
               draw.text(
-                  (75, bottom_y + 20),
+                  (
+                      75,
+                      500
+                  ),
                   "LANGUAGES",
                   fill=WHITE,
-                  font=font(16, True)
+                  font=font(
+                      15,
+                      True
+                  )
               )
 
 
-              language_total = max(
-                  sum(
-                      count
-                      for _, count in languages
-                  ),
-                  1
-              )
-
-
-              for i, (language, count) in enumerate(
+              for i, (
+                  language,
+                  count
+              ) in enumerate(
                   languages
               ):
 
                   y = (
-                      bottom_y +
-                      58 +
-                      i * 25
+                      535
+                      +
+                      i * 27
                   )
+
 
                   percentage = (
                       count /
                       language_total
                   )
 
-                  color = gradient_color(
-                      i / max(len(languages), 1)
-                  )
-
-
-                  draw.ellipse(
-                      (
-                          75,
-                          y,
-                          85,
-                          y + 10
-                      ),
-                      fill=color
-                  )
-
 
                   draw.text(
-                      (95, y - 3),
+                      (
+                          75,
+                          y
+                      ),
                       language,
-                      fill=WHITE,
-                      font=font(10)
+                      fill=MUTED,
+                      font=font(
+                          9
+                      )
                   )
 
 
                   draw.rounded_rectangle(
                       (
-                          190,
-                          y,
-                          520,
+                          165,
+                          y + 3,
+                          525,
                           y + 10
                       ),
-                      radius=5,
-                      fill=(255, 255, 255, 12)
+                      radius=4,
+                      fill=(
+                          255,
+                          255,
+                          255,
+                          10
+                      )
+                  )
+
+
+                  bar_color = mix(
+                      CYAN,
+                      PURPLE,
+                      i /
+                      max(
+                          len(languages) - 1,
+                          1
+                      )
                   )
 
 
                   draw.rounded_rectangle(
                       (
-                          190,
-                          y,
-                          190 +
+                          165,
+                          y + 3,
+                          165
+                          +
                           int(
-                              330 *
+                              360 *
                               percentage
                           ),
                           y + 10
                       ),
-                      radius=5,
-                      fill=color
+                      radius=4,
+                      fill=bar_color
                   )
 
 
-              # --------------------------------------------------------
-              # CONTRIBUTION ACTIVITY
-              # --------------------------------------------------------
+              # ========================================================
+              # ACTIVITY
+              # ========================================================
 
-              rounded_card(
+              rounded_box(
                   draw,
-                  (
-                      580,
-                      bottom_y,
-                      1150,
-                      720
-                  )
+                  585,
+                  480,
+                  1145,
+                  675
               )
 
 
               draw.text(
-                  (605, bottom_y + 20),
-                  "RECENT ACTIVITY",
+                  (
+                      605,
+                      500
+                  ),
+                  "ACTIVITY",
                   fill=WHITE,
-                  font=font(16, True)
+                  font=font(
+                      15,
+                      True
+                  )
               )
 
 
-              # Contribution heatmap
+              # Activity dots
 
-              cell = 13
-
-              gap = 3
-
-              start_x = 605
-
-              start_y = bottom_y + 55
-
-
-              # Last 12 weeks
-
-              from datetime import date, timedelta
-
-              today = date.today()
-
-              start = (
-                  today -
-                  timedelta(days=83)
+              now = datetime.now(
+                  timezone.utc
               )
 
 
-              for day_index in range(84):
+              for i in range(45):
 
-                  current = (
-                      start +
-                      timedelta(days=day_index)
-                  )
-
-                  week = day_index // 7
-
-                  weekday = current.weekday()
-
-                  count = contribution_days.get(
-                      current.isoformat(),
-                      0
+                  x = (
+                      605
+                      +
+                      (i % 15) * 32
                   )
 
 
-                  intensity = min(
-                      count / 5,
-                      1
+                  y = (
+                      535
+                      +
+                      (i // 15) * 32
                   )
 
 
-                  if count == 0:
+                  # deterministic but subtle
+
+                  wave = (
+                      math.sin(
+                          i * 1.7
+                          +
+                          t * math.pi * 2
+                      )
+                      + 1
+                  ) / 2
+
+
+                  has_activity = (
+                      i <
+                      min(
+                          len(activity),
+                          45
+                      )
+                  )
+
+
+                  if has_activity:
+
+                      alpha = int(
+                          50
+                          +
+                          wave * 90
+                      )
+
+                      color = (
+                          CYAN[0],
+                          CYAN[1],
+                          CYAN[2],
+                          alpha
+                      )
+
+                  else:
 
                       color = (
                           255,
@@ -989,66 +1057,52 @@ jobs:
                           10
                       )
 
-                  else:
-
-                      base = gradient_color(
-                          current.toordinal() / 20
-                      )
-
-                      alpha = int(
-                          40 +
-                          intensity * 180
-                      )
-
-                      color = (
-                          base[0],
-                          base[1],
-                          base[2],
-                          alpha
-                      )
-
-
-                  x = (
-                      start_x +
-                      week *
-                      (cell + gap)
-                  )
-
-                  y = (
-                      start_y +
-                      weekday *
-                      (cell + gap)
-                  )
-
 
                   draw.rounded_rectangle(
                       (
                           x,
                           y,
-                          x + cell,
-                          y + cell
+                          x + 18,
+                          y + 18
                       ),
-                      radius=3,
+                      radius=4,
                       fill=color
                   )
 
 
-              # --------------------------------------------------------
-              # SAVE FRAME
-              # --------------------------------------------------------
+              # ========================================================
+              # FRAME
+              # ========================================================
 
-              image = image.convert(
-                  "RGB"
+              draw.rounded_rectangle(
+                  (
+                      1,
+                      1,
+                      WIDTH - 2,
+                      HEIGHT - 2
+                  ),
+                  radius=18,
+                  outline=(
+                      255,
+                      255,
+                      255,
+                      10
+                  ),
+                  width=1
               )
 
-              frames.append(image)
+
+              frames.append(
+                  image.convert("RGB")
+              )
 
 
           # ============================================================
           # SAVE GIF
           # ============================================================
 
-          Path("assets").mkdir(
+          os.makedirs(
+              "assets",
               exist_ok=True
           )
 
@@ -1070,15 +1124,20 @@ jobs:
 
 
           print(
-              f"Created {output}"
+              "Dashboard created:"
           )
 
-          print(
-              f"Frames: {len(frames)}"
-          )
+          print(output)
 
           print(
-              f"Size: {Path(output).stat().st_size / 1024 / 1024:.2f} MB"
+              "Size:",
+              round(
+                  os.path.getsize(output)
+                  / 1024
+                  / 1024,
+                  2
+              ),
+              "MB"
           )
 
           PY
@@ -1086,7 +1145,8 @@ jobs:
       - name: Commit dashboard
         run: |
 
-          git config user.name "github-actions[bot]"
+          git config user.name \
+            "github-actions[bot]"
 
           git config user.email \
             "41898282+github-actions[bot]@users.noreply.github.com"
@@ -1095,12 +1155,12 @@ jobs:
 
           if git diff --cached --quiet; then
 
-            echo "No dashboard changes."
+            echo "Dashboard unchanged."
 
           else
 
             git commit \
-              -m "Update animated profile dashboard"
+              -m "Update profile dashboard"
 
             git push
 
