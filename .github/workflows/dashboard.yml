@@ -1,0 +1,43 @@
+name: Update Profile Dashboard
+
+on:
+  schedule:
+    # Runs once a day at 05:00 UTC — edit the cron to change frequency
+    - cron: "0 5 * * *"
+  workflow_dispatch: {}
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Generate dashboard SVG
+        env:
+          GH_USERNAME: ${{ github.repository_owner }}
+          # Uses the built-in token by default. If your language/repo stats
+          # look incomplete, create a classic PAT with `public_repo, read:user`
+          # scopes, save it as a repo secret named DASHBOARD_TOKEN, and swap
+          # the line below to: GH_TOKEN: ${{ secrets.DASHBOARD_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OUTPUT_PATH: assets/dashboard.svg
+        run: node scripts/generate-dashboard.js
+
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add assets/dashboard.svg
+          git diff --quiet --cached || git commit -m "chore: update profile dashboard"
+          git push
