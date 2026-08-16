@@ -47,6 +47,7 @@ jobs:
           from PIL import Image
           from PIL import ImageDraw
           from PIL import ImageFont
+          from PIL import ImageFilter
           from pathlib import Path
 
 
@@ -499,7 +500,7 @@ jobs:
                   )
 
               glow = glow.filter(
-                  __import__("PIL").ImageFilter.GaussianBlur(35)
+                  ImageFilter.GaussianBlur(35)
               )
 
               image.alpha_composite(glow)
