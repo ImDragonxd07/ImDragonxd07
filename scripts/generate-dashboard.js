@@ -87,6 +87,18 @@ async function fetchStats() {
   return json.data.user;
 }
 
+async function fetchAvatarBase64(login) {
+  try {
+    const res = await fetch(`https://github.com/${login}.png?size=200`);
+    if (!res.ok) return null;
+    const buf = Buffer.from(await res.arrayBuffer());
+    const contentType = res.headers.get("content-type") || "image/png";
+    return `data:${contentType};base64,${buf.toString("base64")}`;
+  } catch {
+    return null;
+  }
+}
+
 function aggregate(user) {
   const repos = user.repositories.nodes;
 
@@ -143,207 +155,234 @@ function esc(str) {
 }
 
 function renderSVG(data) {
-  const W = 920;
-  const H = 480;
-  const PAD = 32;
+  const W = 960;
+  const H = 560;
+  const PAD = 28;
+  const GAP = 20;
 
-  const statBoxes = [
+  const HERO_W = 272;
+  const HERO_X = PAD;
+  const HERO_Y = PAD;
+  const HERO_H = H - PAD * 2;
+
+  const RIGHT_X = HERO_X + HERO_W + GAP;
+  const RIGHT_W = W - RIGHT_X - PAD;
+  const LANG_H = 232;
+  const LANG_Y = PAD;
+  const REPO_Y = LANG_Y + LANG_H + GAP;
+  const REPO_H = HERO_H - LANG_H - GAP;
+
+  // ---------- Hero card content ----------
+  const avatarR = 38;
+  const avatarCx = HERO_X + HERO_W / 2;
+  const avatarCy = HERO_Y + 66;
+
+  const avatarSVG = data.avatarDataUri
+    ? `
+      <clipPath id="avatarClip"><circle cx="${avatarCx}" cy="${avatarCy}" r="${avatarR}"/></clipPath>
+      <image href="${data.avatarDataUri}" x="${avatarCx - avatarR}" y="${avatarCy - avatarR}"
+             width="${avatarR * 2}" height="${avatarR * 2}" clip-path="url(#avatarClip)"/>`
+    : `<circle cx="${avatarCx}" cy="${avatarCy}" r="${avatarR}" fill="#1c2431"/>
+       <text x="${avatarCx}" y="${avatarCy + 8}" text-anchor="middle" class="avatar-fallback">${esc(
+         (data.name || "?").slice(0, 1).toUpperCase()
+       )}</text>`;
+
+  const statRows = [
     { label: "Followers", value: data.followers },
-    { label: "Total Stars", value: data.totalStars },
-    { label: "Public Repos", value: data.totalRepos },
+    { label: "Total stars", value: data.totalStars },
+    { label: "Public repos", value: data.totalRepos },
     { label: "Contributions / yr", value: data.contributions },
   ];
-
-  const statAreaW = W - PAD * 2;
-  const statGap = 16;
-  const statBoxWidth = (statAreaW - statGap * 3) / statBoxes.length;
-  const STAT_Y = 100;
-  const STAT_H = 82;
-
-  const statBoxesSVG = statBoxes
+  const statsTop = avatarCy + avatarR + 50;
+  const rowH = 58;
+  const heroStatsSVG = statRows
     .map((s, i) => {
-      const x = PAD + i * (statBoxWidth + statGap);
-      const delay = (i * 0.4).toFixed(2);
+      const y = statsTop + i * rowH;
       return `
-      <g transform="translate(${x}, ${STAT_Y})">
-        <clipPath id="statclip${i}"><rect x="0" y="0" width="${statBoxWidth}" height="${STAT_H}" rx="14"/></clipPath>
-        <rect x="0" y="0" width="${statBoxWidth}" height="${STAT_H}" rx="14"
-              fill="url(#cardGrad)" stroke="#30363d" stroke-width="1" class="stat-breathe" style="animation-delay:${delay}s"/>
-        <g clip-path="url(#statclip${i})">
-          <rect x="-70" y="0" width="70" height="${STAT_H}" fill="url(#sweepGrad)"
-                class="card-sweep" style="animation-delay:${(i * 0.6).toFixed(2)}s"/>
-        </g>
-        <text x="${statBoxWidth / 2}" y="36" text-anchor="middle" class="stat-value" filter="url(#softGlow)">${s.value.toLocaleString()}</text>
-        <text x="${statBoxWidth / 2}" y="60" text-anchor="middle" class="stat-label">${esc(s.label)}</text>
+      <g transform="translate(${HERO_X + 22}, ${y})">
+        <line x1="0" y1="${rowH - 20}" x2="${HERO_W - 44}" y2="${rowH - 20}" stroke="#232a36" stroke-width="1"/>
+        <text x="0" y="0" class="hero-stat-label">${esc(s.label)}</text>
+        <text x="${HERO_W - 44}" y="0" text-anchor="end" class="hero-stat-value" filter="url(#softGlow)">${s.value.toLocaleString()}</text>
       </g>`;
     })
     .join("");
 
-  const SECTION_Y = 232;
-  const ROW_START_Y = 268;
-  const LANG_ROW_H = 34;
-  const REPO_ROW_H = 38;
-  const DIVIDER_X = PAD + 430;
-
-  const maxBarWidth = 300;
+  // ---------- Language bars ----------
+  const langRowH = (LANG_H - 60) / Math.max(data.topLanguages.length, 1);
+  const rowUsableW = RIGHT_W - 44;
+  const labelReserve = 96;
+  const percentReserve = 42;
+  const barX = labelReserve;
+  const maxBarWidth = rowUsableW - labelReserve - percentReserve;
   const langBarsSVG = data.topLanguages
     .map((lang, i) => {
-      const y = ROW_START_Y + i * LANG_ROW_H;
-      const barWidth = Math.max(8, (lang.percent / 100) * maxBarWidth);
+      const y = LANG_Y + 54 + i * langRowH;
+      const barWidth = Math.max(6, (lang.percent / 100) * maxBarWidth);
       const gid = `langGrad${i}`;
       return `
-      <g transform="translate(${PAD}, ${y})">
-        <circle cx="4" cy="-4" r="4" fill="${lang.color}"/>
-        <text x="14" y="0" class="lang-label">${esc(lang.name)}</text>
-        <text x="${maxBarWidth}" y="0" text-anchor="end" class="lang-percent">${lang.percent}%</text>
-        <rect x="0" y="8" width="${maxBarWidth}" height="8" rx="4" fill="#1c2129"/>
+      <g transform="translate(${RIGHT_X + 22}, ${y})">
+        <text x="0" y="0" class="lang-label">${esc(lang.name)}</text>
+        <text x="${rowUsableW}" y="0" text-anchor="end" class="lang-percent">${lang.percent}%</text>
+        <rect x="${barX}" y="-9" width="${maxBarWidth}" height="7" rx="3.5" fill="#1a2029"/>
         <defs>
           <linearGradient id="${gid}" gradientUnits="objectBoundingBox" x1="-1" y1="0" x2="0" y2="0" spreadMethod="reflect">
             <stop offset="0%" stop-color="${lang.color}"/>
             <stop offset="50%" stop-color="#ffffff"/>
             <stop offset="100%" stop-color="${lang.color}"/>
-            <animate attributeName="x1" values="-1;1" dur="3s" begin="${(i * 0.25).toFixed(2)}s" repeatCount="indefinite"/>
-            <animate attributeName="x2" values="0;2" dur="3s" begin="${(i * 0.25).toFixed(2)}s" repeatCount="indefinite"/>
+            <animate attributeName="x1" values="-1;1" dur="3.2s" begin="${(i * 0.22).toFixed(2)}s" repeatCount="indefinite"/>
+            <animate attributeName="x2" values="0;2" dur="3.2s" begin="${(i * 0.22).toFixed(2)}s" repeatCount="indefinite"/>
           </linearGradient>
         </defs>
-        <rect x="0" y="8" width="${barWidth}" height="8" rx="4" fill="url(#${gid})"/>
+        <rect x="${barX}" y="-9" width="${barWidth}" height="7" rx="3.5" fill="url(#${gid})"/>
       </g>`;
     })
     .join("");
 
+  // ---------- Repo rows ----------
+  const repoRowH = (REPO_H - 60) / Math.max(data.topRepos.length, 1);
   const repoRowsSVG = data.topRepos
     .map((repo, i) => {
-      const y = ROW_START_Y + i * REPO_ROW_H;
+      const y = REPO_Y + 54 + i * repoRowH;
       return `
-      <g transform="translate(${DIVIDER_X + 28}, ${y})">
-        <circle cx="4" cy="-4" r="4" fill="${repo.color}" class="dot-pulse" style="animation-delay:${(i * 0.3).toFixed(2)}s"/>
+      <g transform="translate(${RIGHT_X + 22}, ${y})">
+        <circle cx="4" cy="-5" r="4" fill="${repo.color}" class="dot-pulse" style="animation-delay:${(i * 0.3).toFixed(2)}s"/>
         <text x="16" y="0" class="repo-name">${esc(repo.name)}</text>
-        <text x="368" y="0" text-anchor="end" class="repo-stars">&#9733; ${repo.stars.toLocaleString()}</text>
+        <text x="${RIGHT_W - 44}" y="0" text-anchor="end" class="repo-stars">&#9733; ${repo.stars.toLocaleString()}</text>
       </g>`;
     })
     .join("");
+
+  const cardSweep = (x, y, w, h, delay) => `
+    <clipPath id="sweep-${x}-${y}"><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="18"/></clipPath>
+    <g clip-path="url(#sweep-${x}-${y})">
+      <rect x="${x - 120}" y="${y}" width="120" height="${h}" fill="url(#sweepGrad)" class="card-sweep" style="animation-delay:${delay}s; --sweep-dist:${w + 200}px"/>
+    </g>`;
 
   return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <linearGradient id="bgGrad" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#0a0e14"/>
-      <stop offset="100%" stop-color="#12161d"/>
+      <stop offset="0%" stop-color="#080a0e"/>
+      <stop offset="100%" stop-color="#0d1016"/>
     </linearGradient>
-    <linearGradient id="cardGrad" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#171c25"/>
-      <stop offset="100%" stop-color="#10141b"/>
-    </linearGradient>
-    <linearGradient id="titleGrad" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0%" stop-color="#79c0ff"/>
-      <stop offset="50%" stop-color="#b98cff"/>
-      <stop offset="100%" stop-color="#56d364"/>
+    <linearGradient id="accentGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#818cf8"/>
+      <stop offset="100%" stop-color="#22d3ee"/>
     </linearGradient>
     <linearGradient id="sweepGrad" x1="0" y1="0" x2="1" y2="0">
       <stop offset="0%" stop-color="#ffffff" stop-opacity="0"/>
-      <stop offset="50%" stop-color="#ffffff" stop-opacity="0.10"/>
+      <stop offset="50%" stop-color="#ffffff" stop-opacity="0.06"/>
       <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
     </linearGradient>
-    <linearGradient id="borderGrad" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="${W}" y2="${H}">
-      <stop offset="0%" stop-color="#58a6ff"/>
-      <stop offset="33%" stop-color="#b98cff"/>
-      <stop offset="66%" stop-color="#56d364"/>
-      <stop offset="100%" stop-color="#58a6ff"/>
+    <linearGradient id="ringGrad" gradientUnits="userSpaceOnUse" x1="${avatarCx - avatarR - 6}" y1="${avatarCy - avatarR - 6}" x2="${avatarCx + avatarR + 6}" y2="${avatarCy + avatarR + 6}">
+      <stop offset="0%" stop-color="#818cf8"/>
+      <stop offset="50%" stop-color="#22d3ee"/>
+      <stop offset="100%" stop-color="#818cf8"/>
       <animateTransform attributeName="gradientTransform" type="rotate"
-        from="0 ${W / 2} ${H / 2}" to="360 ${W / 2} ${H / 2}" dur="10s" repeatCount="indefinite"/>
+        from="0 ${avatarCx} ${avatarCy}" to="360 ${avatarCx} ${avatarCy}" dur="6s" repeatCount="indefinite"/>
     </linearGradient>
-    <radialGradient id="blobBlue" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#1f6feb" stop-opacity="0.55"/>
-      <stop offset="100%" stop-color="#1f6feb" stop-opacity="0"/>
+    <radialGradient id="blobIndigo" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#6366f1" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#6366f1" stop-opacity="0"/>
     </radialGradient>
-    <radialGradient id="blobPurple" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#8957e5" stop-opacity="0.5"/>
-      <stop offset="100%" stop-color="#8957e5" stop-opacity="0"/>
+    <radialGradient id="blobCyan" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#22d3ee" stop-opacity="0.28"/>
+      <stop offset="100%" stop-color="#22d3ee" stop-opacity="0"/>
     </radialGradient>
+    <pattern id="dotGrid" width="22" height="22" patternUnits="userSpaceOnUse">
+      <circle cx="1.2" cy="1.2" r="1.2" fill="#ffffff" fill-opacity="0.045"/>
+    </pattern>
     <filter id="softGlow" x="-80%" y="-80%" width="260%" height="260%">
-      <feGaussianBlur stdDeviation="2.6" result="blur">
-        <animate attributeName="stdDeviation" values="1.6;3.4;1.6" dur="3.5s" repeatCount="indefinite"/>
+      <feGaussianBlur stdDeviation="1.8" result="blur">
+        <animate attributeName="stdDeviation" values="1;2.4;1" dur="3.4s" repeatCount="indefinite"/>
       </feGaussianBlur>
-      <feMerge>
-        <feMergeNode in="blur"/>
-        <feMergeNode in="SourceGraphic"/>
-      </feMerge>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
     </filter>
     <filter id="bigBlur" x="-50%" y="-50%" width="200%" height="200%">
-      <feGaussianBlur stdDeviation="45"/>
+      <feGaussianBlur stdDeviation="55"/>
     </filter>
-    <clipPath id="cardClip"><rect x="0" y="0" width="${W}" height="${H}" rx="18"/></clipPath>
+    <clipPath id="cardClip"><rect x="0" y="0" width="${W}" height="${H}" rx="20"/></clipPath>
   </defs>
 
   <style>
     text { font-family: -apple-system, "Segoe UI", Ubuntu, Roboto, sans-serif; }
-    .title { fill: url(#titleGrad); font-size: 30px; font-weight: 800; }
-    .subtitle { fill: #9aa4b2; font-size: 14px; }
-    .section-title { fill: #e6edf3; font-size: 15px; font-weight: 700; letter-spacing: 0.6px; }
-    .stat-label { fill: #9aa4b2; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
-    .stat-value { fill: #79c0ff; font-size: 26px; font-weight: 800; }
-    .lang-label { fill: #dbe2ea; font-size: 13px; font-weight: 600; }
-    .lang-percent { fill: #9aa4b2; font-size: 12px; }
-    .repo-name { fill: #dbe2ea; font-size: 13px; font-weight: 600; }
-    .repo-stars { fill: #e3b341; font-size: 13px; font-weight: 600; }
-    .footer { fill: #6b7684; font-size: 12px; }
+    .mono { font-family: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace; }
+    .title { fill: #f0f3f8; font-size: 20px; font-weight: 700; }
+    .subtitle { fill: #6b7684; font-size: 12.5px; }
+    .avatar-fallback { fill: #f0f3f8; font-size: 28px; font-weight: 700; font-family: -apple-system, sans-serif; }
+    .section-title { fill: #c9d1d9; font-size: 13px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; }
+    .hero-stat-label { fill: #7c8798; font-size: 12px; }
+    .hero-stat-value { fill: url(#accentGrad); font-size: 19px; font-weight: 800; font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+    .lang-label { fill: #d5dbe3; font-size: 12.5px; font-weight: 600; }
+    .lang-percent { fill: #7c8798; font-size: 11.5px; font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+    .repo-name { fill: #d5dbe3; font-size: 12.5px; font-weight: 600; }
+    .repo-stars { fill: #e3b341; font-size: 12.5px; font-weight: 600; font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+    .footer { fill: #4b5563; font-size: 11px; }
+    .glass { fill: #ffffff; fill-opacity: 0.025; stroke: #ffffff; stroke-opacity: 0.08; stroke-width: 1; }
 
-    @keyframes breathe {
-      0%, 100% { opacity: 0.85; }
-      50% { opacity: 1; }
-    }
-    @keyframes sweep {
+    @keyframes sweepMove {
       0% { transform: translateX(0); }
-      100% { transform: translateX(${statBoxWidth + 80}px); }
+      100% { transform: translateX(var(--sweep-dist)); }
     }
     @keyframes dotPulse {
       0%, 100% { opacity: 0.55; r: 3.4px; }
       50% { opacity: 1; r: 4.6px; }
     }
-    @keyframes drift1 {
-      0%, 100% { transform: translate(0px, 0px); }
-      50% { transform: translate(50px, 30px); }
-    }
-    @keyframes drift2 {
-      0%, 100% { transform: translate(0px, 0px); }
-      50% { transform: translate(-40px, -25px); }
-    }
+    @keyframes drift1 { 0%, 100% { transform: translate(0,0); } 50% { transform: translate(36px, 22px); } }
+    @keyframes drift2 { 0%, 100% { transform: translate(0,0); } 50% { transform: translate(-30px, -18px); } }
+    @keyframes borderGlow { 0%, 100% { stroke-opacity: 0.35; } 50% { stroke-opacity: 0.75; } }
 
-    .stat-breathe { animation: breathe 3.2s ease-in-out infinite; }
-    .card-sweep { animation: sweep 2.6s linear infinite; }
+    .card-sweep { animation: sweepMove 4.5s linear infinite; }
     .dot-pulse { animation: dotPulse 2.4s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
-    .blob-a { animation: drift1 9s ease-in-out infinite; }
-    .blob-b { animation: drift2 11s ease-in-out infinite; }
+    .blob-a { animation: drift1 10s ease-in-out infinite; }
+    .blob-b { animation: drift2 12s ease-in-out infinite; }
+    .glow-border { animation: borderGlow 3s ease-in-out infinite; }
   </style>
 
-  <rect x="0" y="0" width="${W}" height="${H}" rx="18" fill="url(#bgGrad)"/>
+  <rect x="0" y="0" width="${W}" height="${H}" rx="20" fill="url(#bgGrad)"/>
+  <rect x="0" y="0" width="${W}" height="${H}" rx="20" fill="url(#dotGrid)"/>
 
   <g clip-path="url(#cardClip)">
-    <circle class="blob-a" cx="120" cy="90" r="160" fill="url(#blobBlue)" filter="url(#bigBlur)"/>
-    <circle class="blob-b" cx="${W - 140}" cy="${H - 100}" r="180" fill="url(#blobPurple)" filter="url(#bigBlur)"/>
+    <circle class="blob-a" cx="${HERO_X + 100}" cy="${HERO_Y + 40}" r="150" fill="url(#blobIndigo)" filter="url(#bigBlur)"/>
+    <circle class="blob-b" cx="${W - 120}" cy="${H - 80}" r="170" fill="url(#blobCyan)" filter="url(#bigBlur)"/>
   </g>
 
-  <rect x="1.5" y="1.5" width="${W - 3}" height="${H - 3}" rx="17" fill="none" stroke="url(#borderGrad)" stroke-width="2"/>
+  <rect x="0.75" y="0.75" width="${W - 1.5}" height="${H - 1.5}" rx="19" fill="none" stroke="#ffffff" stroke-opacity="0.08" stroke-width="1.5"/>
 
-  <text x="${PAD}" y="48" class="title" filter="url(#softGlow)">${esc(data.name)}</text>
-  <text x="${PAD}" y="72" class="subtitle">@${esc(data.login)} &#183; live GitHub dashboard</text>
+  <!-- Hero card -->
+  <rect x="${HERO_X}" y="${HERO_Y}" width="${HERO_W}" height="${HERO_H}" rx="18" class="glass"/>
+  <rect x="${HERO_X}" y="${HERO_Y}" width="${HERO_W}" height="${HERO_H}" rx="18" fill="none" stroke="url(#accentGrad)" stroke-opacity="0.4" stroke-width="1" class="glow-border"/>
+  ${cardSweep(HERO_X, HERO_Y, HERO_W, HERO_H, "0")}
 
-  ${statBoxesSVG}
+  <circle cx="${avatarCx}" cy="${avatarCy}" r="${avatarR + 4}" fill="none" stroke="url(#ringGrad)" stroke-width="2.5"/>
+  ${avatarSVG}
 
-  <text x="${PAD}" y="${SECTION_Y}" class="section-title">TOP LANGUAGES</text>
-  <text x="${DIVIDER_X + 28}" y="${SECTION_Y}" class="section-title">TOP REPOSITORIES</text>
+  <text x="${HERO_X + HERO_W / 2}" y="${avatarCy + avatarR + 26}" text-anchor="middle" class="title">${esc(data.name)}</text>
+  <text x="${HERO_X + HERO_W / 2}" y="${avatarCy + avatarR + 44}" text-anchor="middle" class="subtitle">@${esc(data.login)}</text>
 
+  ${heroStatsSVG}
+
+  <!-- Languages card -->
+  <rect x="${RIGHT_X}" y="${LANG_Y}" width="${RIGHT_W}" height="${LANG_H}" rx="18" class="glass"/>
+  <rect x="${RIGHT_X}" y="${LANG_Y}" width="${RIGHT_W}" height="${LANG_H}" rx="18" fill="none" stroke="url(#accentGrad)" stroke-opacity="0.4" stroke-width="1" class="glow-border"/>
+  ${cardSweep(RIGHT_X, LANG_Y, RIGHT_W, LANG_H, "1.5")}
+  <text x="${RIGHT_X + 22}" y="${LANG_Y + 32}" class="section-title">Top Languages</text>
   ${langBarsSVG}
+
+  <!-- Repositories card -->
+  <rect x="${RIGHT_X}" y="${REPO_Y}" width="${RIGHT_W}" height="${REPO_H}" rx="18" class="glass"/>
+  <rect x="${RIGHT_X}" y="${REPO_Y}" width="${RIGHT_W}" height="${REPO_H}" rx="18" fill="none" stroke="url(#accentGrad)" stroke-opacity="0.4" stroke-width="1" class="glow-border"/>
+  ${cardSweep(RIGHT_X, REPO_Y, RIGHT_W, REPO_H, "3")}
+  <text x="${RIGHT_X + 22}" y="${REPO_Y + 32}" class="section-title">Top Repositories</text>
   ${repoRowsSVG}
 
-  <line x1="${DIVIDER_X}" y1="${SECTION_Y - 22}" x2="${DIVIDER_X}" y2="${H - 34}" stroke="#2a313c" stroke-width="1"/>
-  <text x="${W / 2}" y="${H - 16}" text-anchor="middle" class="footer">updated automatically via GitHub Actions</text>
+  <text x="${W - PAD}" y="${H - 12}" text-anchor="end" class="footer">auto-updated via GitHub Actions</text>
 </svg>`;
 }
 
 async function main() {
   console.log(`Fetching stats for ${USERNAME}...`);
-  const user = await fetchStats();
-  const data = aggregate(user);
+  const [user, avatarDataUri] = await Promise.all([fetchStats(), fetchAvatarBase64(USERNAME)]);
+  const data = { ...aggregate(user), avatarDataUri };
   const svg = renderSVG(data);
 
   const outPath = path.join(process.cwd(), OUTPUT_PATH);
