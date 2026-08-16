@@ -1,0 +1,456 @@
+name: Update Profile Dashboard
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"
+
+  workflow_dispatch:
+
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  update-dashboard:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Generate dashboard
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_USERNAME: ImDragonxd07
+        run: |
+          python3 <<'PY'
+          import os
+          import json
+          import urllib.request
+          import urllib.parse
+          from pathlib import Path
+
+          username = os.environ["GITHUB_USERNAME"]
+          token = os.environ["GITHUB_TOKEN"]
+
+          headers = {
+              "Authorization": f"Bearer {token}",
+              "Accept": "application/vnd.github+json",
+              "X-GitHub-Api-Version": "2022-11-28"
+          }
+
+          def github(url):
+              req = urllib.request.Request(url, headers=headers)
+              with urllib.request.urlopen(req) as response:
+                  return json.loads(response.read())
+
+          user = github(f"https://api.github.com/users/{username}")
+
+          repos = []
+          page = 1
+
+          while True:
+              data = github(
+                  f"https://api.github.com/users/{username}/repos"
+                  f"?per_page=100&page={page}&type=owner&sort=pushed"
+              )
+
+              if not data:
+                  break
+
+              repos.extend(data)
+
+              if len(data) < 100:
+                  break
+
+              page += 1
+
+          repos.sort(
+              key=lambda r: (
+                  r.get("stargazers_count", 0),
+                  r.get("forks_count", 0),
+                  r.get("watchers_count", 0)
+              ),
+              reverse=True
+          )
+
+          top_repos = repos[:6]
+
+          total_stars = sum(r.get("stargazers_count", 0) for r in repos)
+          total_forks = sum(r.get("forks_count", 0) for r in repos)
+
+          languages = {}
+
+          for repo in repos:
+              language = repo.get("language")
+
+              if language:
+                  languages[language] = languages.get(language, 0) + 1
+
+          languages = sorted(
+              languages.items(),
+              key=lambda x: x[1],
+              reverse=True
+          )[:6]
+
+          total_languages = sum(x[1] for x in languages) or 1
+
+          language_rows = ""
+
+          language_colors = [
+              "#00d9ff",
+              "#7c3aed",
+              "#22c55e",
+              "#f59e0b",
+              "#ef4444",
+              "#ec4899"
+          ]
+
+          for i, (language, count) in enumerate(languages):
+              percent = count / total_languages * 100
+              color = language_colors[i % len(language_colors)]
+
+              language_rows += f"""
+              <g transform="translate(0,{i * 30})">
+                <circle cx="8" cy="8" r="6" fill="{color}"/>
+                <text x="24" y="13"
+                      fill="#c9d1d9"
+                      font-size="13"
+                      font-family="Arial, sans-serif">
+                  {language}
+                </text>
+
+                <text x="250" y="13"
+                      fill="#777"
+                      font-size="12"
+                      text-anchor="end"
+                      font-family="Arial, sans-serif">
+                  {percent:.0f}%
+                </text>
+
+                <rect x="270"
+                      y="1"
+                      width="210"
+                      height="10"
+                      rx="5"
+                      fill="#ffffff"
+                      fill-opacity=".06"/>
+
+                <rect x="270"
+                      y="1"
+                      width="{210 * percent / 100:.1f}"
+                      height="10"
+                      rx="5"
+                      fill="{color}"/>
+              </g>
+              """
+
+          repo_cards = ""
+
+          for i, repo in enumerate(top_repos):
+              x = 30 + (i % 2) * 550
+              y = 40 + (i // 2) * 105
+
+              name = repo["name"]
+              stars = repo.get("stargazers_count", 0)
+              forks = repo.get("forks_count", 0)
+              description = repo.get("description") or ""
+
+              description = description.replace("&", "&amp;")
+              description = description.replace("<", "&lt;")
+              description = description.replace(">", "&gt;")
+
+              if len(description) > 65:
+                  description = description[:62] + "..."
+
+              repo_cards += f"""
+              <g transform="translate({x},{y})">
+
+                <rect width="510"
+                      height="85"
+                      rx="14"
+                      fill="#ffffff"
+                      fill-opacity=".035"
+                      stroke="#ffffff"
+                      stroke-opacity=".07"/>
+
+                <circle cx="24"
+                        cy="26"
+                        r="7"
+                        fill="#00d9ff"/>
+
+                <text x="42"
+                      y="31"
+                      fill="#ffffff"
+                      font-size="16"
+                      font-weight="bold"
+                      font-family="Arial, sans-serif">
+                  {name}
+                </text>
+
+                <text x="42"
+                      y="55"
+                      fill="#8b949e"
+                      font-size="12"
+                      font-family="Arial, sans-serif">
+                  {description}
+                </text>
+
+                <text x="42"
+                      y="75"
+                      fill="#7c3aed"
+                      font-size="11"
+                      font-family="Arial, sans-serif">
+                  ★ {stars}   ◇ {forks}
+                </text>
+
+              </g>
+              """
+
+          svg = f"""<svg xmlns="http://www.w3.org/2000/svg"
+               width="1200"
+               height="760"
+               viewBox="0 0 1200 760">
+
+          <defs>
+
+            <linearGradient id="background"
+                            x1="0"
+                            y1="0"
+                            x2="1"
+                            y2="1">
+
+              <stop offset="0%" stop-color="#05060d"/>
+              <stop offset="50%" stop-color="#0d0920"/>
+              <stop offset="100%" stop-color="#03070f"/>
+
+            </linearGradient>
+
+            <linearGradient id="accent"
+                            x1="0"
+                            y1="0"
+                            x2="1"
+                            y2="0">
+
+              <stop offset="0%" stop-color="#00d9ff"/>
+              <stop offset="50%" stop-color="#7c3aed"/>
+              <stop offset="100%" stop-color="#00d9ff"/>
+
+            </linearGradient>
+
+            <filter id="glow">
+
+              <feGaussianBlur
+                stdDeviation="12"/>
+
+            </filter>
+
+          </defs>
+
+          <rect width="1200"
+                height="760"
+                rx="20"
+                fill="url(#background)"/>
+
+          <!-- Ambient glow -->
+
+          <circle cx="80"
+                  cy="80"
+                  r="250"
+                  fill="#00d9ff"
+                  opacity=".08"
+                  filter="url(#glow)"/>
+
+          <circle cx="1120"
+                  cy="650"
+                  r="300"
+                  fill="#7c3aed"
+                  opacity=".08"
+                  filter="url(#glow)"/>
+
+          <!-- Header -->
+
+          <text x="50"
+                y="70"
+                fill="#ffffff"
+                font-size="28"
+                font-weight="bold"
+                font-family="Arial, sans-serif">
+            GitHub Activity
+          </text>
+
+          <rect x="50"
+                y="88"
+                width="1100"
+                height="2"
+                fill="url(#accent)"
+                opacity=".5"/>
+
+          <!-- Stats -->
+
+          <g transform="translate(50,125)">
+
+            <rect width="255"
+                  height="95"
+                  rx="16"
+                  fill="#ffffff"
+                  fill-opacity=".035"/>
+
+            <text x="25"
+                  y="35"
+                  fill="#8b949e"
+                  font-size="12"
+                  font-family="Arial, sans-serif">
+              REPOSITORIES
+            </text>
+
+            <text x="25"
+                  y="72"
+                  fill="#00d9ff"
+                  font-size="30"
+                  font-weight="bold"
+                  font-family="Arial, sans-serif">
+              {len(repos)}
+            </text>
+
+          </g>
+
+          <g transform="translate(325,125)">
+
+            <rect width="255"
+                  height="95"
+                  rx="16"
+                  fill="#ffffff"
+                  fill-opacity=".035"/>
+
+            <text x="25"
+                  y="35"
+                  fill="#8b949e"
+                  font-size="12"
+                  font-family="Arial, sans-serif">
+              STARS
+            </text>
+
+            <text x="25"
+                  y="72"
+                  fill="#7c3aed"
+                  font-size="30"
+                  font-weight="bold"
+                  font-family="Arial, sans-serif">
+              {total_stars}
+            </text>
+
+          </g>
+
+          <g transform="translate(600,125)">
+
+            <rect width="255"
+                  height="95"
+                  rx="16"
+                  fill="#ffffff"
+                  fill-opacity=".035"/>
+
+            <text x="25"
+                  y="35"
+                  fill="#8b949e"
+                  font-size="12"
+                  font-family="Arial, sans-serif">
+              FORKS
+            </text>
+
+            <text x="25"
+                  y="72"
+                  fill="#00d9ff"
+                  font-size="30"
+                  font-weight="bold"
+                  font-family="Arial, sans-serif">
+              {total_forks}
+            </text>
+
+          </g>
+
+          <g transform="translate(875,125)">
+
+            <rect width="275"
+                  height="95"
+                  rx="16"
+                  fill="#ffffff"
+                  fill-opacity=".035"/>
+
+            <text x="25"
+                  y="35"
+                  fill="#8b949e"
+                  font-size="12"
+                  font-family="Arial, sans-serif">
+              FOLLOWERS
+            </text>
+
+            <text x="25"
+                  y="72"
+                  fill="#7c3aed"
+                  font-size="30"
+                  font-weight="bold"
+                  font-family="Arial, sans-serif">
+              {user.get("followers", 0)}
+            </text>
+
+          </g>
+
+          <!-- Projects -->
+
+          <text x="50"
+                y="275"
+                fill="#ffffff"
+                font-size="20"
+                font-weight="bold"
+                font-family="Arial, sans-serif">
+            Most Starred Projects
+          </text>
+
+          {repo_cards}
+
+          <!-- Languages -->
+
+          <text x="50"
+                y="610"
+                fill="#ffffff"
+                font-size="20"
+                font-weight="bold"
+                font-family="Arial, sans-serif">
+            Languages
+          </text>
+
+          <g transform="translate(50,630)">
+            {language_rows}
+          </g>
+
+          </svg>
+          """
+
+          Path("assets").mkdir(exist_ok=True)
+
+          Path("assets/dashboard.svg").write_text(
+              svg,
+              encoding="utf-8"
+          )
+
+          print("Dashboard generated.")
+
+          PY
+
+      - name: Commit dashboard
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add assets/dashboard.svg
+
+          if git diff --cached --quiet; then
+            echo "No changes."
+          else
+            git commit -m "Update profile dashboard"
+            git push
+          fi
