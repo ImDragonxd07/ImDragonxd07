@@ -1,248 +1,239 @@
-<svg width="920" height="480" viewBox="0 0 920 480" xmlns="http://www.w3.org/2000/svg">
+<svg width="960" height="560" viewBox="0 0 960 560" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <linearGradient id="bgGrad" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#0a0e14"/>
-      <stop offset="100%" stop-color="#12161d"/>
+      <stop offset="0%" stop-color="#080a0e"/>
+      <stop offset="100%" stop-color="#0d1016"/>
     </linearGradient>
-    <linearGradient id="cardGrad" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#171c25"/>
-      <stop offset="100%" stop-color="#10141b"/>
-    </linearGradient>
-    <linearGradient id="titleGrad" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0%" stop-color="#79c0ff"/>
-      <stop offset="50%" stop-color="#b98cff"/>
-      <stop offset="100%" stop-color="#56d364"/>
+    <linearGradient id="accentGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#818cf8"/>
+      <stop offset="100%" stop-color="#22d3ee"/>
     </linearGradient>
     <linearGradient id="sweepGrad" x1="0" y1="0" x2="1" y2="0">
       <stop offset="0%" stop-color="#ffffff" stop-opacity="0"/>
-      <stop offset="50%" stop-color="#ffffff" stop-opacity="0.10"/>
+      <stop offset="50%" stop-color="#ffffff" stop-opacity="0.06"/>
       <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
     </linearGradient>
-    <linearGradient id="borderGrad" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="920" y2="480">
-      <stop offset="0%" stop-color="#58a6ff"/>
-      <stop offset="33%" stop-color="#b98cff"/>
-      <stop offset="66%" stop-color="#56d364"/>
-      <stop offset="100%" stop-color="#58a6ff"/>
+    <linearGradient id="ringGrad" gradientUnits="userSpaceOnUse" x1="120" y1="50" x2="208" y2="138">
+      <stop offset="0%" stop-color="#818cf8"/>
+      <stop offset="50%" stop-color="#22d3ee"/>
+      <stop offset="100%" stop-color="#818cf8"/>
       <animateTransform attributeName="gradientTransform" type="rotate"
-        from="0 460 240" to="360 460 240" dur="10s" repeatCount="indefinite"/>
+        from="0 164 94" to="360 164 94" dur="6s" repeatCount="indefinite"/>
     </linearGradient>
-    <radialGradient id="blobBlue" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#1f6feb" stop-opacity="0.55"/>
-      <stop offset="100%" stop-color="#1f6feb" stop-opacity="0"/>
+    <radialGradient id="blobIndigo" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#6366f1" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#6366f1" stop-opacity="0"/>
     </radialGradient>
-    <radialGradient id="blobPurple" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#8957e5" stop-opacity="0.5"/>
-      <stop offset="100%" stop-color="#8957e5" stop-opacity="0"/>
+    <radialGradient id="blobCyan" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#22d3ee" stop-opacity="0.28"/>
+      <stop offset="100%" stop-color="#22d3ee" stop-opacity="0"/>
     </radialGradient>
+    <pattern id="dotGrid" width="22" height="22" patternUnits="userSpaceOnUse">
+      <circle cx="1.2" cy="1.2" r="1.2" fill="#ffffff" fill-opacity="0.045"/>
+    </pattern>
     <filter id="softGlow" x="-80%" y="-80%" width="260%" height="260%">
-      <feGaussianBlur stdDeviation="2.6" result="blur">
-        <animate attributeName="stdDeviation" values="1.6;3.4;1.6" dur="3.5s" repeatCount="indefinite"/>
+      <feGaussianBlur stdDeviation="1.8" result="blur">
+        <animate attributeName="stdDeviation" values="1;2.4;1" dur="3.4s" repeatCount="indefinite"/>
       </feGaussianBlur>
-      <feMerge>
-        <feMergeNode in="blur"/>
-        <feMergeNode in="SourceGraphic"/>
-      </feMerge>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
     </filter>
     <filter id="bigBlur" x="-50%" y="-50%" width="200%" height="200%">
-      <feGaussianBlur stdDeviation="45"/>
+      <feGaussianBlur stdDeviation="55"/>
     </filter>
-    <clipPath id="cardClip"><rect x="0" y="0" width="920" height="480" rx="18"/></clipPath>
+    <clipPath id="cardClip"><rect x="0" y="0" width="960" height="560" rx="20"/></clipPath>
   </defs>
 
   <style>
     text { font-family: -apple-system, "Segoe UI", Ubuntu, Roboto, sans-serif; }
-    .title { fill: url(#titleGrad); font-size: 30px; font-weight: 800; }
-    .subtitle { fill: #9aa4b2; font-size: 14px; }
-    .section-title { fill: #e6edf3; font-size: 15px; font-weight: 700; letter-spacing: 0.6px; }
-    .stat-label { fill: #9aa4b2; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
-    .stat-value { fill: #79c0ff; font-size: 26px; font-weight: 800; }
-    .lang-label { fill: #dbe2ea; font-size: 13px; font-weight: 600; }
-    .lang-percent { fill: #9aa4b2; font-size: 12px; }
-    .repo-name { fill: #dbe2ea; font-size: 13px; font-weight: 600; }
-    .repo-stars { fill: #e3b341; font-size: 13px; font-weight: 600; }
-    .footer { fill: #6b7684; font-size: 12px; }
+    .mono { font-family: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace; }
+    .title { fill: #f0f3f8; font-size: 20px; font-weight: 700; }
+    .subtitle { fill: #6b7684; font-size: 12.5px; }
+    .avatar-fallback { fill: #f0f3f8; font-size: 28px; font-weight: 700; font-family: -apple-system, sans-serif; }
+    .section-title { fill: #c9d1d9; font-size: 13px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; }
+    .hero-stat-label { fill: #7c8798; font-size: 12px; }
+    .hero-stat-value { fill: url(#accentGrad); font-size: 19px; font-weight: 800; font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+    .lang-label { fill: #d5dbe3; font-size: 12.5px; font-weight: 600; }
+    .lang-percent { fill: #7c8798; font-size: 11.5px; font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+    .repo-name { fill: #d5dbe3; font-size: 12.5px; font-weight: 600; }
+    .repo-stars { fill: #e3b341; font-size: 12.5px; font-weight: 600; font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+    .footer { fill: #4b5563; font-size: 11px; }
+    .glass { fill: #ffffff; fill-opacity: 0.025; stroke: #ffffff; stroke-opacity: 0.08; stroke-width: 1; }
 
-    @keyframes breathe {
-      0%, 100% { opacity: 0.85; }
-      50% { opacity: 1; }
-    }
-    @keyframes sweep {
+    @keyframes sweepMove {
       0% { transform: translateX(0); }
-      100% { transform: translateX(282px); }
+      100% { transform: translateX(var(--sweep-dist)); }
     }
     @keyframes dotPulse {
       0%, 100% { opacity: 0.55; r: 3.4px; }
       50% { opacity: 1; r: 4.6px; }
     }
-    @keyframes drift1 {
-      0%, 100% { transform: translate(0px, 0px); }
-      50% { transform: translate(50px, 30px); }
-    }
-    @keyframes drift2 {
-      0%, 100% { transform: translate(0px, 0px); }
-      50% { transform: translate(-40px, -25px); }
-    }
+    @keyframes drift1 { 0%, 100% { transform: translate(0,0); } 50% { transform: translate(36px, 22px); } }
+    @keyframes drift2 { 0%, 100% { transform: translate(0,0); } 50% { transform: translate(-30px, -18px); } }
+    @keyframes borderGlow { 0%, 100% { stroke-opacity: 0.35; } 50% { stroke-opacity: 0.75; } }
 
-    .stat-breathe { animation: breathe 3.2s ease-in-out infinite; }
-    .card-sweep { animation: sweep 2.6s linear infinite; }
+    .card-sweep { animation: sweepMove 4.5s linear infinite; }
     .dot-pulse { animation: dotPulse 2.4s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
-    .blob-a { animation: drift1 9s ease-in-out infinite; }
-    .blob-b { animation: drift2 11s ease-in-out infinite; }
+    .blob-a { animation: drift1 10s ease-in-out infinite; }
+    .blob-b { animation: drift2 12s ease-in-out infinite; }
+    .glow-border { animation: borderGlow 3s ease-in-out infinite; }
   </style>
 
-  <rect x="0" y="0" width="920" height="480" rx="18" fill="url(#bgGrad)"/>
+  <rect x="0" y="0" width="960" height="560" rx="20" fill="url(#bgGrad)"/>
+  <rect x="0" y="0" width="960" height="560" rx="20" fill="url(#dotGrid)"/>
 
   <g clip-path="url(#cardClip)">
-    <circle class="blob-a" cx="120" cy="90" r="160" fill="url(#blobBlue)" filter="url(#bigBlur)"/>
-    <circle class="blob-b" cx="780" cy="380" r="180" fill="url(#blobPurple)" filter="url(#bigBlur)"/>
+    <circle class="blob-a" cx="128" cy="68" r="150" fill="url(#blobIndigo)" filter="url(#bigBlur)"/>
+    <circle class="blob-b" cx="840" cy="480" r="170" fill="url(#blobCyan)" filter="url(#bigBlur)"/>
   </g>
 
-  <rect x="1.5" y="1.5" width="917" height="477" rx="17" fill="none" stroke="url(#borderGrad)" stroke-width="2"/>
+  <rect x="0.75" y="0.75" width="958.5" height="558.5" rx="19" fill="none" stroke="#ffffff" stroke-opacity="0.08" stroke-width="1.5"/>
 
-  <text x="32" y="48" class="title" filter="url(#softGlow)">ImDragonxd07</text>
-  <text x="32" y="72" class="subtitle">@ImDragonxd07 &#183; live GitHub dashboard</text>
+  <!-- Hero card -->
+  <rect x="28" y="28" width="272" height="504" rx="18" class="glass"/>
+  <rect x="28" y="28" width="272" height="504" rx="18" fill="none" stroke="url(#accentGrad)" stroke-opacity="0.4" stroke-width="1" class="glow-border"/>
+  
+    <clipPath id="sweep-28-28"><rect x="28" y="28" width="272" height="504" rx="18"/></clipPath>
+    <g clip-path="url(#sweep-28-28)">
+      <rect x="-92" y="28" width="120" height="504" fill="url(#sweepGrad)" class="card-sweep" style="animation-delay:0s; --sweep-dist:472px"/>
+    </g>
+
+  <circle cx="164" cy="94" r="42" fill="none" stroke="url(#ringGrad)" stroke-width="2.5"/>
+  
+      <clipPath id="avatarClip"><circle cx="164" cy="94" r="38"/></clipPath>
+      <image href="data:image/jpeg;base64,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" x="126" y="56"
+             width="76" height="76" clip-path="url(#avatarClip)"/>
+
+  <text x="164" y="158" text-anchor="middle" class="title">ImDragonxd07</text>
+  <text x="164" y="176" text-anchor="middle" class="subtitle">@ImDragonxd07</text>
 
   
-      <g transform="translate(32, 100)">
-        <clipPath id="statclip0"><rect x="0" y="0" width="202" height="82" rx="14"/></clipPath>
-        <rect x="0" y="0" width="202" height="82" rx="14"
-              fill="url(#cardGrad)" stroke="#30363d" stroke-width="1" class="stat-breathe" style="animation-delay:0.00s"/>
-        <g clip-path="url(#statclip0)">
-          <rect x="-70" y="0" width="70" height="82" fill="url(#sweepGrad)"
-                class="card-sweep" style="animation-delay:0.00s"/>
-        </g>
-        <text x="101" y="36" text-anchor="middle" class="stat-value" filter="url(#softGlow)">0</text>
-        <text x="101" y="60" text-anchor="middle" class="stat-label">Followers</text>
+      <g transform="translate(50, 182)">
+        <line x1="0" y1="38" x2="228" y2="38" stroke="#232a36" stroke-width="1"/>
+        <text x="0" y="0" class="hero-stat-label">Followers</text>
+        <text x="228" y="0" text-anchor="end" class="hero-stat-value" filter="url(#softGlow)">0</text>
       </g>
-      <g transform="translate(250, 100)">
-        <clipPath id="statclip1"><rect x="0" y="0" width="202" height="82" rx="14"/></clipPath>
-        <rect x="0" y="0" width="202" height="82" rx="14"
-              fill="url(#cardGrad)" stroke="#30363d" stroke-width="1" class="stat-breathe" style="animation-delay:0.40s"/>
-        <g clip-path="url(#statclip1)">
-          <rect x="-70" y="0" width="70" height="82" fill="url(#sweepGrad)"
-                class="card-sweep" style="animation-delay:0.60s"/>
-        </g>
-        <text x="101" y="36" text-anchor="middle" class="stat-value" filter="url(#softGlow)">5</text>
-        <text x="101" y="60" text-anchor="middle" class="stat-label">Total Stars</text>
+      <g transform="translate(50, 240)">
+        <line x1="0" y1="38" x2="228" y2="38" stroke="#232a36" stroke-width="1"/>
+        <text x="0" y="0" class="hero-stat-label">Total stars</text>
+        <text x="228" y="0" text-anchor="end" class="hero-stat-value" filter="url(#softGlow)">5</text>
       </g>
-      <g transform="translate(468, 100)">
-        <clipPath id="statclip2"><rect x="0" y="0" width="202" height="82" rx="14"/></clipPath>
-        <rect x="0" y="0" width="202" height="82" rx="14"
-              fill="url(#cardGrad)" stroke="#30363d" stroke-width="1" class="stat-breathe" style="animation-delay:0.80s"/>
-        <g clip-path="url(#statclip2)">
-          <rect x="-70" y="0" width="70" height="82" fill="url(#sweepGrad)"
-                class="card-sweep" style="animation-delay:1.20s"/>
-        </g>
-        <text x="101" y="36" text-anchor="middle" class="stat-value" filter="url(#softGlow)">8</text>
-        <text x="101" y="60" text-anchor="middle" class="stat-label">Public Repos</text>
+      <g transform="translate(50, 298)">
+        <line x1="0" y1="38" x2="228" y2="38" stroke="#232a36" stroke-width="1"/>
+        <text x="0" y="0" class="hero-stat-label">Public repos</text>
+        <text x="228" y="0" text-anchor="end" class="hero-stat-value" filter="url(#softGlow)">8</text>
       </g>
-      <g transform="translate(686, 100)">
-        <clipPath id="statclip3"><rect x="0" y="0" width="202" height="82" rx="14"/></clipPath>
-        <rect x="0" y="0" width="202" height="82" rx="14"
-              fill="url(#cardGrad)" stroke="#30363d" stroke-width="1" class="stat-breathe" style="animation-delay:1.20s"/>
-        <g clip-path="url(#statclip3)">
-          <rect x="-70" y="0" width="70" height="82" fill="url(#sweepGrad)"
-                class="card-sweep" style="animation-delay:1.80s"/>
-        </g>
-        <text x="101" y="36" text-anchor="middle" class="stat-value" filter="url(#softGlow)">82</text>
-        <text x="101" y="60" text-anchor="middle" class="stat-label">Contributions / yr</text>
+      <g transform="translate(50, 356)">
+        <line x1="0" y1="38" x2="228" y2="38" stroke="#232a36" stroke-width="1"/>
+        <text x="0" y="0" class="hero-stat-label">Contributions / yr</text>
+        <text x="228" y="0" text-anchor="end" class="hero-stat-value" filter="url(#softGlow)">83</text>
       </g>
 
-  <text x="32" y="232" class="section-title">TOP LANGUAGES</text>
-  <text x="490" y="232" class="section-title">TOP REPOSITORIES</text>
-
+  <!-- Languages card -->
+  <rect x="320" y="28" width="612" height="232" rx="18" class="glass"/>
+  <rect x="320" y="28" width="612" height="232" rx="18" fill="none" stroke="url(#accentGrad)" stroke-opacity="0.4" stroke-width="1" class="glow-border"/>
   
-      <g transform="translate(32, 268)">
-        <circle cx="4" cy="-4" r="4" fill="#178600"/>
-        <text x="14" y="0" class="lang-label">C#</text>
-        <text x="300" y="0" text-anchor="end" class="lang-percent">79.1%</text>
-        <rect x="0" y="8" width="300" height="8" rx="4" fill="#1c2129"/>
+    <clipPath id="sweep-320-28"><rect x="320" y="28" width="612" height="232" rx="18"/></clipPath>
+    <g clip-path="url(#sweep-320-28)">
+      <rect x="200" y="28" width="120" height="232" fill="url(#sweepGrad)" class="card-sweep" style="animation-delay:1.5s; --sweep-dist:812px"/>
+    </g>
+  <text x="342" y="60" class="section-title">Top Languages</text>
+  
+      <g transform="translate(342, 82)">
+        <text x="0" y="0" class="lang-label">C#</text>
+        <text x="568" y="0" text-anchor="end" class="lang-percent">79%</text>
+        <rect x="96" y="-9" width="430" height="7" rx="3.5" fill="#1a2029"/>
         <defs>
           <linearGradient id="langGrad0" gradientUnits="objectBoundingBox" x1="-1" y1="0" x2="0" y2="0" spreadMethod="reflect">
             <stop offset="0%" stop-color="#178600"/>
             <stop offset="50%" stop-color="#ffffff"/>
             <stop offset="100%" stop-color="#178600"/>
-            <animate attributeName="x1" values="-1;1" dur="3s" begin="0.00s" repeatCount="indefinite"/>
-            <animate attributeName="x2" values="0;2" dur="3s" begin="0.00s" repeatCount="indefinite"/>
+            <animate attributeName="x1" values="-1;1" dur="3.2s" begin="0.00s" repeatCount="indefinite"/>
+            <animate attributeName="x2" values="0;2" dur="3.2s" begin="0.00s" repeatCount="indefinite"/>
           </linearGradient>
         </defs>
-        <rect x="0" y="8" width="237.29999999999998" height="8" rx="4" fill="url(#langGrad0)"/>
+        <rect x="96" y="-9" width="339.7" height="7" rx="3.5" fill="url(#langGrad0)"/>
       </g>
-      <g transform="translate(32, 302)">
-        <circle cx="4" cy="-4" r="4" fill="#00A2FF"/>
-        <text x="14" y="0" class="lang-label">Luau</text>
-        <text x="300" y="0" text-anchor="end" class="lang-percent">19.8%</text>
-        <rect x="0" y="8" width="300" height="8" rx="4" fill="#1c2129"/>
+      <g transform="translate(342, 125)">
+        <text x="0" y="0" class="lang-label">Luau</text>
+        <text x="568" y="0" text-anchor="end" class="lang-percent">19.7%</text>
+        <rect x="96" y="-9" width="430" height="7" rx="3.5" fill="#1a2029"/>
         <defs>
           <linearGradient id="langGrad1" gradientUnits="objectBoundingBox" x1="-1" y1="0" x2="0" y2="0" spreadMethod="reflect">
             <stop offset="0%" stop-color="#00A2FF"/>
             <stop offset="50%" stop-color="#ffffff"/>
             <stop offset="100%" stop-color="#00A2FF"/>
-            <animate attributeName="x1" values="-1;1" dur="3s" begin="0.25s" repeatCount="indefinite"/>
-            <animate attributeName="x2" values="0;2" dur="3s" begin="0.25s" repeatCount="indefinite"/>
+            <animate attributeName="x1" values="-1;1" dur="3.2s" begin="0.22s" repeatCount="indefinite"/>
+            <animate attributeName="x2" values="0;2" dur="3.2s" begin="0.22s" repeatCount="indefinite"/>
           </linearGradient>
         </defs>
-        <rect x="0" y="8" width="59.400000000000006" height="8" rx="4" fill="url(#langGrad1)"/>
+        <rect x="96" y="-9" width="84.71" height="7" rx="3.5" fill="url(#langGrad1)"/>
       </g>
-      <g transform="translate(32, 336)">
-        <circle cx="4" cy="-4" r="4" fill="#e34c26"/>
-        <text x="14" y="0" class="lang-label">HTML</text>
-        <text x="300" y="0" text-anchor="end" class="lang-percent">0.7%</text>
-        <rect x="0" y="8" width="300" height="8" rx="4" fill="#1c2129"/>
+      <g transform="translate(342, 168)">
+        <text x="0" y="0" class="lang-label">HTML</text>
+        <text x="568" y="0" text-anchor="end" class="lang-percent">0.7%</text>
+        <rect x="96" y="-9" width="430" height="7" rx="3.5" fill="#1a2029"/>
         <defs>
           <linearGradient id="langGrad2" gradientUnits="objectBoundingBox" x1="-1" y1="0" x2="0" y2="0" spreadMethod="reflect">
             <stop offset="0%" stop-color="#e34c26"/>
             <stop offset="50%" stop-color="#ffffff"/>
             <stop offset="100%" stop-color="#e34c26"/>
-            <animate attributeName="x1" values="-1;1" dur="3s" begin="0.50s" repeatCount="indefinite"/>
-            <animate attributeName="x2" values="0;2" dur="3s" begin="0.50s" repeatCount="indefinite"/>
+            <animate attributeName="x1" values="-1;1" dur="3.2s" begin="0.44s" repeatCount="indefinite"/>
+            <animate attributeName="x2" values="0;2" dur="3.2s" begin="0.44s" repeatCount="indefinite"/>
           </linearGradient>
         </defs>
-        <rect x="0" y="8" width="8" height="8" rx="4" fill="url(#langGrad2)"/>
+        <rect x="96" y="-9" width="6" height="7" rx="3.5" fill="url(#langGrad2)"/>
       </g>
-      <g transform="translate(32, 370)">
-        <circle cx="4" cy="-4" r="4" fill="#f1e05a"/>
-        <text x="14" y="0" class="lang-label">JavaScript</text>
-        <text x="300" y="0" text-anchor="end" class="lang-percent">0.4%</text>
-        <rect x="0" y="8" width="300" height="8" rx="4" fill="#1c2129"/>
+      <g transform="translate(342, 211)">
+        <text x="0" y="0" class="lang-label">JavaScript</text>
+        <text x="568" y="0" text-anchor="end" class="lang-percent">0.6%</text>
+        <rect x="96" y="-9" width="430" height="7" rx="3.5" fill="#1a2029"/>
         <defs>
           <linearGradient id="langGrad3" gradientUnits="objectBoundingBox" x1="-1" y1="0" x2="0" y2="0" spreadMethod="reflect">
             <stop offset="0%" stop-color="#f1e05a"/>
             <stop offset="50%" stop-color="#ffffff"/>
             <stop offset="100%" stop-color="#f1e05a"/>
-            <animate attributeName="x1" values="-1;1" dur="3s" begin="0.75s" repeatCount="indefinite"/>
-            <animate attributeName="x2" values="0;2" dur="3s" begin="0.75s" repeatCount="indefinite"/>
+            <animate attributeName="x1" values="-1;1" dur="3.2s" begin="0.66s" repeatCount="indefinite"/>
+            <animate attributeName="x2" values="0;2" dur="3.2s" begin="0.66s" repeatCount="indefinite"/>
           </linearGradient>
         </defs>
-        <rect x="0" y="8" width="8" height="8" rx="4" fill="url(#langGrad3)"/>
-      </g>
-  
-      <g transform="translate(490, 268)">
-        <circle cx="4" cy="-4" r="4" fill="#178600" class="dot-pulse" style="animation-delay:0.00s"/>
-        <text x="16" y="0" class="repo-name">DaydreamClient</text>
-        <text x="368" y="0" text-anchor="end" class="repo-stars">&#9733; 2</text>
-      </g>
-      <g transform="translate(490, 306)">
-        <circle cx="4" cy="-4" r="4" fill="#178600" class="dot-pulse" style="animation-delay:0.30s"/>
-        <text x="16" y="0" class="repo-name">BVCC</text>
-        <text x="368" y="0" text-anchor="end" class="repo-stars">&#9733; 1</text>
-      </g>
-      <g transform="translate(490, 344)">
-        <circle cx="4" cy="-4" r="4" fill="#00A2FF" class="dot-pulse" style="animation-delay:0.60s"/>
-        <text x="16" y="0" class="repo-name">Screenlab</text>
-        <text x="368" y="0" text-anchor="end" class="repo-stars">&#9733; 1</text>
-      </g>
-      <g transform="translate(490, 382)">
-        <circle cx="4" cy="-4" r="4" fill="#178600" class="dot-pulse" style="animation-delay:0.90s"/>
-        <text x="16" y="0" class="repo-name">OscConnect</text>
-        <text x="368" y="0" text-anchor="end" class="repo-stars">&#9733; 1</text>
-      </g>
-      <g transform="translate(490, 420)">
-        <circle cx="4" cy="-4" r="4" fill="#f1e05a" class="dot-pulse" style="animation-delay:1.20s"/>
-        <text x="16" y="0" class="repo-name">ImDragonxd07</text>
-        <text x="368" y="0" text-anchor="end" class="repo-stars">&#9733; 0</text>
+        <rect x="96" y="-9" width="6" height="7" rx="3.5" fill="url(#langGrad3)"/>
       </g>
 
-  <line x1="462" y1="210" x2="462" y2="446" stroke="#2a313c" stroke-width="1"/>
-  <text x="460" y="464" text-anchor="middle" class="footer">updated automatically via GitHub Actions</text>
+  <!-- Repositories card -->
+  <rect x="320" y="280" width="612" height="252" rx="18" class="glass"/>
+  <rect x="320" y="280" width="612" height="252" rx="18" fill="none" stroke="url(#accentGrad)" stroke-opacity="0.4" stroke-width="1" class="glow-border"/>
+  
+    <clipPath id="sweep-320-280"><rect x="320" y="280" width="612" height="252" rx="18"/></clipPath>
+    <g clip-path="url(#sweep-320-280)">
+      <rect x="200" y="280" width="120" height="252" fill="url(#sweepGrad)" class="card-sweep" style="animation-delay:3s; --sweep-dist:812px"/>
+    </g>
+  <text x="342" y="312" class="section-title">Top Repositories</text>
+  
+      <g transform="translate(342, 334)">
+        <circle cx="4" cy="-5" r="4" fill="#178600" class="dot-pulse" style="animation-delay:0.00s"/>
+        <text x="16" y="0" class="repo-name">DaydreamClient</text>
+        <text x="568" y="0" text-anchor="end" class="repo-stars">&#9733; 2</text>
+      </g>
+      <g transform="translate(342, 372.4)">
+        <circle cx="4" cy="-5" r="4" fill="#178600" class="dot-pulse" style="animation-delay:0.30s"/>
+        <text x="16" y="0" class="repo-name">BVCC</text>
+        <text x="568" y="0" text-anchor="end" class="repo-stars">&#9733; 1</text>
+      </g>
+      <g transform="translate(342, 410.8)">
+        <circle cx="4" cy="-5" r="4" fill="#00A2FF" class="dot-pulse" style="animation-delay:0.60s"/>
+        <text x="16" y="0" class="repo-name">Screenlab</text>
+        <text x="568" y="0" text-anchor="end" class="repo-stars">&#9733; 1</text>
+      </g>
+      <g transform="translate(342, 449.2)">
+        <circle cx="4" cy="-5" r="4" fill="#178600" class="dot-pulse" style="animation-delay:0.90s"/>
+        <text x="16" y="0" class="repo-name">OscConnect</text>
+        <text x="568" y="0" text-anchor="end" class="repo-stars">&#9733; 1</text>
+      </g>
+      <g transform="translate(342, 487.6)">
+        <circle cx="4" cy="-5" r="4" fill="#f1e05a" class="dot-pulse" style="animation-delay:1.20s"/>
+        <text x="16" y="0" class="repo-name">ImDragonxd07</text>
+        <text x="568" y="0" text-anchor="end" class="repo-stars">&#9733; 0</text>
+      </g>
+
+  <text x="932" y="548" text-anchor="end" class="footer">auto-updated via GitHub Actions</text>
 </svg>
