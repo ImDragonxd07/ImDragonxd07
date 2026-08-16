@@ -1,0 +1,155 @@
+<svg width="880" height="420" viewBox="0 0 880 420" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0d1117"/>
+      <stop offset="100%" stop-color="#161b22"/>
+    </linearGradient>
+    <linearGradient id="cardGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#161b22"/>
+      <stop offset="100%" stop-color="#0d1117"/>
+    </linearGradient>
+    <linearGradient id="titleGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#58a6ff"/>
+      <stop offset="50%" stop-color="#a371f7"/>
+      <stop offset="100%" stop-color="#39d353"/>
+    </linearGradient>
+    <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="3.2" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <style>
+    .card-bg { fill: url(#bgGrad); }
+    text { font-family: -apple-system, "Segoe UI", Ubuntu, Roboto, sans-serif; }
+    .title { fill: url(#titleGrad); font-size: 26px; font-weight: 700; }
+    .subtitle { fill: #7d8590; font-size: 13px; }
+    .section-title { fill: #e6edf3; font-size: 14px; font-weight: 600; letter-spacing: 0.5px; }
+    .stat-label { fill: #7d8590; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; }
+    .stat-value { fill: #58a6ff; font-size: 22px; font-weight: 700; }
+    .lang-label { fill: #c9d1d9; font-size: 12px; }
+    .lang-percent { fill: #7d8590; font-size: 11px; }
+    .repo-name { fill: #c9d1d9; font-size: 12px; }
+    .repo-stars { fill: #e3b341; font-size: 12px; }
+    .border { fill: none; stroke: #30363d; stroke-width: 1.5; rx: 16; }
+
+    @keyframes pulseGlow {
+      0%, 100% { opacity: 0.75; }
+      50% { opacity: 1; }
+    }
+    @keyframes growBar {
+      from { transform: scaleX(0); }
+      to { transform: scaleX(1); }
+    }
+    @keyframes fadeSlideIn {
+      from { opacity: 0; transform: translateX(-6px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes titlePulse {
+      0%, 100% { filter: drop-shadow(0 0 4px rgba(88,166,255,0.6)); }
+      50% { filter: drop-shadow(0 0 12px rgba(163,113,247,0.9)); }
+    }
+
+    .glow-pulse { animation: pulseGlow 3.5s ease-in-out infinite; }
+    .bar { transform-box: fill-box; transform-origin: left center; animation: growBar 1s ease-out forwards; }
+    .repo-row { opacity: 0; animation: fadeSlideIn 0.6s ease-out forwards; }
+    .title-pulse { animation: titlePulse 4s ease-in-out infinite; }
+  </style>
+
+  <rect x="0" y="0" width="880" height="420" rx="18" class="card-bg"/>
+  <rect x="1" y="1" width="878" height="418" rx="17" class="border"/>
+
+  <text x="30" y="42" class="title title-pulse">ImDragonxd07</text>
+  <text x="30" y="60" class="subtitle">@ImDragonxd07 &#183; live GitHub dashboard</text>
+
+  
+      <g transform="translate(30, 70)" class="glow-pulse" style="animation-delay:0s">
+        <rect x="0" y="0" width="189" height="70" rx="12"
+              fill="url(#cardGrad)" stroke="#30363d" stroke-width="1"/>
+        <text x="94.5" y="30" text-anchor="middle" class="stat-value" filter="url(#glow)">0</text>
+        <text x="94.5" y="52" text-anchor="middle" class="stat-label">Followers</text>
+      </g>
+      <g transform="translate(235, 70)" class="glow-pulse" style="animation-delay:0.3s">
+        <rect x="0" y="0" width="189" height="70" rx="12"
+              fill="url(#cardGrad)" stroke="#30363d" stroke-width="1"/>
+        <text x="94.5" y="30" text-anchor="middle" class="stat-value" filter="url(#glow)">5</text>
+        <text x="94.5" y="52" text-anchor="middle" class="stat-label">Total Stars</text>
+      </g>
+      <g transform="translate(440, 70)" class="glow-pulse" style="animation-delay:0.6s">
+        <rect x="0" y="0" width="189" height="70" rx="12"
+              fill="url(#cardGrad)" stroke="#30363d" stroke-width="1"/>
+        <text x="94.5" y="30" text-anchor="middle" class="stat-value" filter="url(#glow)">8</text>
+        <text x="94.5" y="52" text-anchor="middle" class="stat-label">Public Repos</text>
+      </g>
+      <g transform="translate(645, 70)" class="glow-pulse" style="animation-delay:0.8999999999999999s">
+        <rect x="0" y="0" width="189" height="70" rx="12"
+              fill="url(#cardGrad)" stroke="#30363d" stroke-width="1"/>
+        <text x="94.5" y="30" text-anchor="middle" class="stat-value" filter="url(#glow)">79</text>
+        <text x="94.5" y="52" text-anchor="middle" class="stat-label">Contributions (yr)</text>
+      </g>
+
+  <text x="30" y="195" class="section-title">TOP LANGUAGES</text>
+  <text x="460" y="195" class="section-title">TOP REPOSITORIES</text>
+
+  
+      <g transform="translate(30, 220)">
+        <text x="0" y="0" class="lang-label">C#</text>
+        <text x="290" y="0" text-anchor="end" class="lang-percent">79.2%</text>
+        <rect x="0" y="6" width="260" height="6" rx="3" fill="#21262d"/>
+        <rect x="0" y="6" width="205.92000000000002" height="6" rx="3" fill="#178600"
+              class="bar" style="animation-delay:0s" filter="url(#glow)"/>
+      </g>
+      <g transform="translate(30, 246)">
+        <text x="0" y="0" class="lang-label">Luau</text>
+        <text x="290" y="0" text-anchor="end" class="lang-percent">19.8%</text>
+        <rect x="0" y="6" width="260" height="6" rx="3" fill="#21262d"/>
+        <rect x="0" y="6" width="51.480000000000004" height="6" rx="3" fill="#00A2FF"
+              class="bar" style="animation-delay:0.15s" filter="url(#glow)"/>
+      </g>
+      <g transform="translate(30, 272)">
+        <text x="0" y="0" class="lang-label">HTML</text>
+        <text x="290" y="0" text-anchor="end" class="lang-percent">0.7%</text>
+        <rect x="0" y="6" width="260" height="6" rx="3" fill="#21262d"/>
+        <rect x="0" y="6" width="6" height="6" rx="3" fill="#e34c26"
+              class="bar" style="animation-delay:0.3s" filter="url(#glow)"/>
+      </g>
+      <g transform="translate(30, 298)">
+        <text x="0" y="0" class="lang-label">JavaScript</text>
+        <text x="290" y="0" text-anchor="end" class="lang-percent">0.3%</text>
+        <rect x="0" y="6" width="260" height="6" rx="3" fill="#21262d"/>
+        <rect x="0" y="6" width="6" height="6" rx="3" fill="#f1e05a"
+              class="bar" style="animation-delay:0.44999999999999996s" filter="url(#glow)"/>
+      </g>
+  
+      <g transform="translate(460, 220)" class="repo-row" style="animation-delay:0s">
+        <circle cx="4" cy="-4" r="4" fill="#178600"/>
+        <text x="16" y="0" class="repo-name">DaydreamClient</text>
+        <text x="360" y="0" text-anchor="end" class="repo-stars">&#9733; 2</text>
+      </g>
+      <g transform="translate(460, 254)" class="repo-row" style="animation-delay:0.15s">
+        <circle cx="4" cy="-4" r="4" fill="#178600"/>
+        <text x="16" y="0" class="repo-name">BVCC</text>
+        <text x="360" y="0" text-anchor="end" class="repo-stars">&#9733; 1</text>
+      </g>
+      <g transform="translate(460, 288)" class="repo-row" style="animation-delay:0.3s">
+        <circle cx="4" cy="-4" r="4" fill="#00A2FF"/>
+        <text x="16" y="0" class="repo-name">Screenlab</text>
+        <text x="360" y="0" text-anchor="end" class="repo-stars">&#9733; 1</text>
+      </g>
+      <g transform="translate(460, 322)" class="repo-row" style="animation-delay:0.44999999999999996s">
+        <circle cx="4" cy="-4" r="4" fill="#178600"/>
+        <text x="16" y="0" class="repo-name">OscConnect</text>
+        <text x="360" y="0" text-anchor="end" class="repo-stars">&#9733; 1</text>
+      </g>
+      <g transform="translate(460, 356)" class="repo-row" style="animation-delay:0.6s">
+        <circle cx="4" cy="-4" r="4" fill="#f1e05a"/>
+        <text x="16" y="0" class="repo-name">ImDragonxd07</text>
+        <text x="360" y="0" text-anchor="end" class="repo-stars">&#9733; 0</text>
+      </g>
+
+  <line x1="440" y1="185" x2="440" y2="395" stroke="#30363d" stroke-width="1"/>
+  <text x="440" y="406" text-anchor="middle" class="subtitle">updated automatically via GitHub Actions</text>
+</svg>
