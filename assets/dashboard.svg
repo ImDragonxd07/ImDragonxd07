@@ -1,0 +1,536 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     width="1200"
+     height="760"
+     viewBox="0 0 1200 760">
+
+<defs>
+
+  <linearGradient id="background"
+                  x1="0"
+                  y1="0"
+                  x2="1"
+                  y2="1">
+
+    <stop offset="0%" stop-color="#05060d"/>
+    <stop offset="50%" stop-color="#0d0920"/>
+    <stop offset="100%" stop-color="#03070f"/>
+
+  </linearGradient>
+
+  <linearGradient id="accent"
+                  x1="0"
+                  y1="0"
+                  x2="1"
+                  y2="0">
+
+    <stop offset="0%" stop-color="#00d9ff"/>
+    <stop offset="50%" stop-color="#7c3aed"/>
+    <stop offset="100%" stop-color="#00d9ff"/>
+
+  </linearGradient>
+
+  <filter id="glow">
+
+    <feGaussianBlur
+      stdDeviation="12"/>
+
+  </filter>
+
+</defs>
+
+<rect width="1200"
+      height="760"
+      rx="20"
+      fill="url(#background)"/>
+
+<!-- Ambient glow -->
+
+<circle cx="80"
+        cy="80"
+        r="250"
+        fill="#00d9ff"
+        opacity=".08"
+        filter="url(#glow)"/>
+
+<circle cx="1120"
+        cy="650"
+        r="300"
+        fill="#7c3aed"
+        opacity=".08"
+        filter="url(#glow)"/>
+
+<!-- Header -->
+
+<text x="50"
+      y="70"
+      fill="#ffffff"
+      font-size="28"
+      font-weight="bold"
+      font-family="Arial, sans-serif">
+  GitHub Activity
+</text>
+
+<rect x="50"
+      y="88"
+      width="1100"
+      height="2"
+      fill="url(#accent)"
+      opacity=".5"/>
+
+<!-- Stats -->
+
+<g transform="translate(50,125)">
+
+  <rect width="255"
+        height="95"
+        rx="16"
+        fill="#ffffff"
+        fill-opacity=".035"/>
+
+  <text x="25"
+        y="35"
+        fill="#8b949e"
+        font-size="12"
+        font-family="Arial, sans-serif">
+    REPOSITORIES
+  </text>
+
+  <text x="25"
+        y="72"
+        fill="#00d9ff"
+        font-size="30"
+        font-weight="bold"
+        font-family="Arial, sans-serif">
+    8
+  </text>
+
+</g>
+
+<g transform="translate(325,125)">
+
+  <rect width="255"
+        height="95"
+        rx="16"
+        fill="#ffffff"
+        fill-opacity=".035"/>
+
+  <text x="25"
+        y="35"
+        fill="#8b949e"
+        font-size="12"
+        font-family="Arial, sans-serif">
+    STARS
+  </text>
+
+  <text x="25"
+        y="72"
+        fill="#7c3aed"
+        font-size="30"
+        font-weight="bold"
+        font-family="Arial, sans-serif">
+    5
+  </text>
+
+</g>
+
+<g transform="translate(600,125)">
+
+  <rect width="255"
+        height="95"
+        rx="16"
+        fill="#ffffff"
+        fill-opacity=".035"/>
+
+  <text x="25"
+        y="35"
+        fill="#8b949e"
+        font-size="12"
+        font-family="Arial, sans-serif">
+    FORKS
+  </text>
+
+  <text x="25"
+        y="72"
+        fill="#00d9ff"
+        font-size="30"
+        font-weight="bold"
+        font-family="Arial, sans-serif">
+    0
+  </text>
+
+</g>
+
+<g transform="translate(875,125)">
+
+  <rect width="275"
+        height="95"
+        rx="16"
+        fill="#ffffff"
+        fill-opacity=".035"/>
+
+  <text x="25"
+        y="35"
+        fill="#8b949e"
+        font-size="12"
+        font-family="Arial, sans-serif">
+    FOLLOWERS
+  </text>
+
+  <text x="25"
+        y="72"
+        fill="#7c3aed"
+        font-size="30"
+        font-weight="bold"
+        font-family="Arial, sans-serif">
+    0
+  </text>
+
+</g>
+
+<!-- Projects -->
+
+<text x="50"
+      y="275"
+      fill="#ffffff"
+      font-size="20"
+      font-weight="bold"
+      font-family="Arial, sans-serif">
+  Most Starred Projects
+</text>
+
+
+    <g transform="translate(30,40)">
+
+      <rect width="510"
+            height="85"
+            rx="14"
+            fill="#ffffff"
+            fill-opacity=".035"
+            stroke="#ffffff"
+            stroke-opacity=".07"/>
+
+      <circle cx="24"
+              cy="26"
+              r="7"
+              fill="#00d9ff"/>
+
+      <text x="42"
+            y="31"
+            fill="#ffffff"
+            font-size="16"
+            font-weight="bold"
+            font-family="Arial, sans-serif">
+        DaydreamClient
+      </text>
+
+      <text x="42"
+            y="55"
+            fill="#8b949e"
+            font-size="12"
+            font-family="Arial, sans-serif">
+        My old vrchat mod before EAC, For research purposes only
+      </text>
+
+      <text x="42"
+            y="75"
+            fill="#7c3aed"
+            font-size="11"
+            font-family="Arial, sans-serif">
+        ★ 2   ◇ 0
+      </text>
+
+    </g>
+    
+    <g transform="translate(580,40)">
+
+      <rect width="510"
+            height="85"
+            rx="14"
+            fill="#ffffff"
+            fill-opacity=".035"
+            stroke="#ffffff"
+            stroke-opacity=".07"/>
+
+      <circle cx="24"
+              cy="26"
+              r="7"
+              fill="#00d9ff"/>
+
+      <text x="42"
+            y="31"
+            fill="#ffffff"
+            font-size="16"
+            font-weight="bold"
+            font-family="Arial, sans-serif">
+        Screenlab
+      </text>
+
+      <text x="42"
+            y="55"
+            fill="#8b949e"
+            font-size="12"
+            font-family="Arial, sans-serif">
+        Screenlab is a open-source gui based 2D game engine built from...
+      </text>
+
+      <text x="42"
+            y="75"
+            fill="#7c3aed"
+            font-size="11"
+            font-family="Arial, sans-serif">
+        ★ 1   ◇ 0
+      </text>
+
+    </g>
+    
+    <g transform="translate(30,145)">
+
+      <rect width="510"
+            height="85"
+            rx="14"
+            fill="#ffffff"
+            fill-opacity=".035"
+            stroke="#ffffff"
+            stroke-opacity=".07"/>
+
+      <circle cx="24"
+              cy="26"
+              r="7"
+              fill="#00d9ff"/>
+
+      <text x="42"
+            y="31"
+            fill="#ffffff"
+            font-size="16"
+            font-weight="bold"
+            font-family="Arial, sans-serif">
+        BVCC
+      </text>
+
+      <text x="42"
+            y="55"
+            fill="#8b949e"
+            font-size="12"
+            font-family="Arial, sans-serif">
+        BVCC is a custom tool designed to improve quality of life and ...
+      </text>
+
+      <text x="42"
+            y="75"
+            fill="#7c3aed"
+            font-size="11"
+            font-family="Arial, sans-serif">
+        ★ 1   ◇ 0
+      </text>
+
+    </g>
+    
+    <g transform="translate(580,145)">
+
+      <rect width="510"
+            height="85"
+            rx="14"
+            fill="#ffffff"
+            fill-opacity=".035"
+            stroke="#ffffff"
+            stroke-opacity=".07"/>
+
+      <circle cx="24"
+              cy="26"
+              r="7"
+              fill="#00d9ff"/>
+
+      <text x="42"
+            y="31"
+            fill="#ffffff"
+            font-size="16"
+            font-weight="bold"
+            font-family="Arial, sans-serif">
+        OscConnect
+      </text>
+
+      <text x="42"
+            y="55"
+            fill="#8b949e"
+            font-size="12"
+            font-family="Arial, sans-serif">
+        Allows control of Windows NowPlayingManager through VRChat OSC
+      </text>
+
+      <text x="42"
+            y="75"
+            fill="#7c3aed"
+            font-size="11"
+            font-family="Arial, sans-serif">
+        ★ 1   ◇ 0
+      </text>
+
+    </g>
+    
+    <g transform="translate(30,250)">
+
+      <rect width="510"
+            height="85"
+            rx="14"
+            fill="#ffffff"
+            fill-opacity=".035"
+            stroke="#ffffff"
+            stroke-opacity=".07"/>
+
+      <circle cx="24"
+              cy="26"
+              r="7"
+              fill="#00d9ff"/>
+
+      <text x="42"
+            y="31"
+            fill="#ffffff"
+            font-size="16"
+            font-weight="bold"
+            font-family="Arial, sans-serif">
+        ImDragonxd07
+      </text>
+
+      <text x="42"
+            y="55"
+            fill="#8b949e"
+            font-size="12"
+            font-family="Arial, sans-serif">
+        
+      </text>
+
+      <text x="42"
+            y="75"
+            fill="#7c3aed"
+            font-size="11"
+            font-family="Arial, sans-serif">
+        ★ 0   ◇ 0
+      </text>
+
+    </g>
+    
+    <g transform="translate(580,250)">
+
+      <rect width="510"
+            height="85"
+            rx="14"
+            fill="#ffffff"
+            fill-opacity=".035"
+            stroke="#ffffff"
+            stroke-opacity=".07"/>
+
+      <circle cx="24"
+              cy="26"
+              r="7"
+              fill="#00d9ff"/>
+
+      <text x="42"
+            y="31"
+            fill="#ffffff"
+            font-size="16"
+            font-weight="bold"
+            font-family="Arial, sans-serif">
+        VrcComponentCopier
+      </text>
+
+      <text x="42"
+            y="55"
+            fill="#8b949e"
+            font-size="12"
+            font-family="Arial, sans-serif">
+        Accidently deleted some components from my avatar so I had AI ...
+      </text>
+
+      <text x="42"
+            y="75"
+            fill="#7c3aed"
+            font-size="11"
+            font-family="Arial, sans-serif">
+        ★ 0   ◇ 0
+      </text>
+
+    </g>
+    
+
+<!-- Languages -->
+
+<text x="50"
+      y="610"
+      fill="#ffffff"
+      font-size="20"
+      font-weight="bold"
+      font-family="Arial, sans-serif">
+  Languages
+</text>
+
+<g transform="translate(50,630)">
+  
+    <g transform="translate(0,0)">
+      <circle cx="8" cy="8" r="6" fill="#00d9ff"/>
+      <text x="24" y="13"
+            fill="#c9d1d9"
+            font-size="13"
+            font-family="Arial, sans-serif">
+        C#
+      </text>
+
+      <text x="250" y="13"
+            fill="#777"
+            font-size="12"
+            text-anchor="end"
+            font-family="Arial, sans-serif">
+        80%
+      </text>
+
+      <rect x="270"
+            y="1"
+            width="210"
+            height="10"
+            rx="5"
+            fill="#ffffff"
+            fill-opacity=".06"/>
+
+      <rect x="270"
+            y="1"
+            width="168.0"
+            height="10"
+            rx="5"
+            fill="#00d9ff"/>
+    </g>
+    
+    <g transform="translate(0,30)">
+      <circle cx="8" cy="8" r="6" fill="#7c3aed"/>
+      <text x="24" y="13"
+            fill="#c9d1d9"
+            font-size="13"
+            font-family="Arial, sans-serif">
+        Luau
+      </text>
+
+      <text x="250" y="13"
+            fill="#777"
+            font-size="12"
+            text-anchor="end"
+            font-family="Arial, sans-serif">
+        20%
+      </text>
+
+      <rect x="270"
+            y="1"
+            width="210"
+            height="10"
+            rx="5"
+            fill="#ffffff"
+            fill-opacity=".06"/>
+
+      <rect x="270"
+            y="1"
+            width="42.0"
+            height="10"
+            rx="5"
+            fill="#7c3aed"/>
+    </g>
+    
+</g>
+
+</svg>
