@@ -5,38 +5,27 @@
       <stop offset="100%" stop-color="#0d1016"/>
     </linearGradient>
     <linearGradient id="accentGrad" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0%" stop-color="#818cf8"/>
-      <stop offset="100%" stop-color="#22d3ee"/>
-    </linearGradient>
-    <linearGradient id="sweepGrad" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0%" stop-color="#ffffff" stop-opacity="0"/>
-      <stop offset="50%" stop-color="#ffffff" stop-opacity="0.06"/>
-      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+      <stop offset="0%" stop-color="#7c9cff"/>
+      <stop offset="100%" stop-color="#7c9cff"/>
     </linearGradient>
     <linearGradient id="ringGrad" gradientUnits="userSpaceOnUse" x1="120" y1="50" x2="208" y2="138">
-      <stop offset="0%" stop-color="#818cf8"/>
-      <stop offset="50%" stop-color="#22d3ee"/>
-      <stop offset="100%" stop-color="#818cf8"/>
+      <stop offset="0%" stop-color="#7c9cff"/>
+      <stop offset="50%" stop-color="#4b6bd6"/>
+      <stop offset="100%" stop-color="#7c9cff"/>
       <animateTransform attributeName="gradientTransform" type="rotate"
-        from="0 164 94" to="360 164 94" dur="6s" repeatCount="indefinite"/>
+        from="0 164 94" to="360 164 94" dur="10s" repeatCount="indefinite"/>
     </linearGradient>
     <radialGradient id="blobIndigo" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#6366f1" stop-opacity="0.35"/>
-      <stop offset="100%" stop-color="#6366f1" stop-opacity="0"/>
+      <stop offset="0%" stop-color="#3b4a8f" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#3b4a8f" stop-opacity="0"/>
     </radialGradient>
     <radialGradient id="blobCyan" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#22d3ee" stop-opacity="0.28"/>
-      <stop offset="100%" stop-color="#22d3ee" stop-opacity="0"/>
+      <stop offset="0%" stop-color="#2a5566" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#2a5566" stop-opacity="0"/>
     </radialGradient>
     <pattern id="dotGrid" width="22" height="22" patternUnits="userSpaceOnUse">
-      <circle cx="1.2" cy="1.2" r="1.2" fill="#ffffff" fill-opacity="0.045"/>
+      <circle cx="1.2" cy="1.2" r="1.2" fill="#ffffff" fill-opacity="0.03"/>
     </pattern>
-    <filter id="softGlow" x="-80%" y="-80%" width="260%" height="260%">
-      <feGaussianBlur stdDeviation="1.8" result="blur">
-        <animate attributeName="stdDeviation" values="1;2.4;1" dur="3.4s" repeatCount="indefinite"/>
-      </feGaussianBlur>
-      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-    </filter>
     <filter id="bigBlur" x="-50%" y="-50%" width="200%" height="200%">
       <feGaussianBlur stdDeviation="55"/>
     </filter>
@@ -51,31 +40,19 @@
     .avatar-fallback { fill: #f0f3f8; font-size: 28px; font-weight: 700; font-family: -apple-system, sans-serif; }
     .section-title { fill: #c9d1d9; font-size: 13px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; }
     .hero-stat-label { fill: #7c8798; font-size: 12px; }
-    .hero-stat-value { fill: url(#accentGrad); font-size: 19px; font-weight: 800; font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+    .hero-stat-value { fill: #d7e0f5; font-size: 19px; font-weight: 700; font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
     .lang-label { fill: #d5dbe3; font-size: 12.5px; font-weight: 600; }
     .lang-percent { fill: #7c8798; font-size: 11.5px; font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
     .repo-name { fill: #d5dbe3; font-size: 12.5px; font-weight: 600; }
-    .repo-stars { fill: #e3b341; font-size: 12.5px; font-weight: 600; font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+    .repo-stars { fill: #c9a24a; font-size: 12.5px; font-weight: 600; font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
     .footer { fill: #4b5563; font-size: 11px; }
-    .glass { fill: #ffffff; fill-opacity: 0.025; stroke: #ffffff; stroke-opacity: 0.08; stroke-width: 1; }
+    .glass { fill: #ffffff; fill-opacity: 0.02; stroke: #ffffff; stroke-opacity: 0.06; stroke-width: 1; }
 
-    @keyframes sweepMove {
-      0% { transform: translateX(0); }
-      100% { transform: translateX(var(--sweep-dist)); }
-    }
-    @keyframes dotPulse {
-      0%, 100% { opacity: 0.55; r: 3.4px; }
-      50% { opacity: 1; r: 4.6px; }
-    }
-    @keyframes drift1 { 0%, 100% { transform: translate(0,0); } 50% { transform: translate(36px, 22px); } }
-    @keyframes drift2 { 0%, 100% { transform: translate(0,0); } 50% { transform: translate(-30px, -18px); } }
-    @keyframes borderGlow { 0%, 100% { stroke-opacity: 0.35; } 50% { stroke-opacity: 0.75; } }
+    @keyframes drift1 { 0%, 100% { transform: translate(0,0); } 50% { transform: translate(24px, 14px); } }
+    @keyframes drift2 { 0%, 100% { transform: translate(0,0); } 50% { transform: translate(-20px, -12px); } }
 
-    .card-sweep { animation: sweepMove 4.5s linear infinite; }
-    .dot-pulse { animation: dotPulse 2.4s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
-    .blob-a { animation: drift1 10s ease-in-out infinite; }
-    .blob-b { animation: drift2 12s ease-in-out infinite; }
-    .glow-border { animation: borderGlow 3s ease-in-out infinite; }
+    .blob-a { animation: drift1 16s ease-in-out infinite; }
+    .blob-b { animation: drift2 18s ease-in-out infinite; }
   </style>
 
   <rect x="0" y="0" width="960" height="560" rx="20" fill="url(#bgGrad)"/>
@@ -90,12 +67,7 @@
 
   <!-- Hero card -->
   <rect x="28" y="28" width="272" height="504" rx="18" class="glass"/>
-  <rect x="28" y="28" width="272" height="504" rx="18" fill="none" stroke="url(#accentGrad)" stroke-opacity="0.4" stroke-width="1" class="glow-border"/>
-  
-    <clipPath id="sweep-28-28"><rect x="28" y="28" width="272" height="504" rx="18"/></clipPath>
-    <g clip-path="url(#sweep-28-28)">
-      <rect x="-92" y="28" width="120" height="504" fill="url(#sweepGrad)" class="card-sweep" style="animation-delay:0s; --sweep-dist:472px"/>
-    </g>
+  <rect x="28" y="28" width="272" height="504" rx="18" fill="none" stroke="#3b4454" stroke-width="1"/>
 
   <circle cx="164" cy="94" r="42" fill="none" stroke="url(#ringGrad)" stroke-width="2.5"/>
   
@@ -110,127 +82,81 @@
       <g transform="translate(50, 182)">
         <line x1="0" y1="38" x2="228" y2="38" stroke="#232a36" stroke-width="1"/>
         <text x="0" y="0" class="hero-stat-label">Followers</text>
-        <text x="228" y="0" text-anchor="end" class="hero-stat-value" filter="url(#softGlow)">0</text>
+        <text x="228" y="0" text-anchor="end" class="hero-stat-value">0</text>
       </g>
       <g transform="translate(50, 240)">
         <line x1="0" y1="38" x2="228" y2="38" stroke="#232a36" stroke-width="1"/>
         <text x="0" y="0" class="hero-stat-label">Total stars</text>
-        <text x="228" y="0" text-anchor="end" class="hero-stat-value" filter="url(#softGlow)">5</text>
+        <text x="228" y="0" text-anchor="end" class="hero-stat-value">5</text>
       </g>
       <g transform="translate(50, 298)">
         <line x1="0" y1="38" x2="228" y2="38" stroke="#232a36" stroke-width="1"/>
         <text x="0" y="0" class="hero-stat-label">Public repos</text>
-        <text x="228" y="0" text-anchor="end" class="hero-stat-value" filter="url(#softGlow)">8</text>
+        <text x="228" y="0" text-anchor="end" class="hero-stat-value">8</text>
       </g>
       <g transform="translate(50, 356)">
         <line x1="0" y1="38" x2="228" y2="38" stroke="#232a36" stroke-width="1"/>
         <text x="0" y="0" class="hero-stat-label">Contributions / yr</text>
-        <text x="228" y="0" text-anchor="end" class="hero-stat-value" filter="url(#softGlow)">85</text>
+        <text x="228" y="0" text-anchor="end" class="hero-stat-value">86</text>
       </g>
 
   <!-- Languages card -->
   <rect x="320" y="28" width="612" height="232" rx="18" class="glass"/>
-  <rect x="320" y="28" width="612" height="232" rx="18" fill="none" stroke="url(#accentGrad)" stroke-opacity="0.4" stroke-width="1" class="glow-border"/>
-  
-    <clipPath id="sweep-320-28"><rect x="320" y="28" width="612" height="232" rx="18"/></clipPath>
-    <g clip-path="url(#sweep-320-28)">
-      <rect x="200" y="28" width="120" height="232" fill="url(#sweepGrad)" class="card-sweep" style="animation-delay:1.5s; --sweep-dist:812px"/>
-    </g>
+  <rect x="320" y="28" width="612" height="232" rx="18" fill="none" stroke="#3b4454" stroke-width="1"/>
   <text x="342" y="60" class="section-title">Top Languages</text>
   
       <g transform="translate(342, 82)">
         <text x="0" y="0" class="lang-label">C#</text>
-        <text x="568" y="0" text-anchor="end" class="lang-percent">79%</text>
-        <rect x="96" y="-9" width="430" height="7" rx="3.5" fill="#1a2029"/>
-        <defs>
-          <linearGradient id="langGrad0" gradientUnits="objectBoundingBox" x1="-1" y1="0" x2="0" y2="0" spreadMethod="reflect">
-            <stop offset="0%" stop-color="#178600"/>
-            <stop offset="50%" stop-color="#ffffff"/>
-            <stop offset="100%" stop-color="#178600"/>
-            <animate attributeName="x1" values="-1;1" dur="3.2s" begin="0.00s" repeatCount="indefinite"/>
-            <animate attributeName="x2" values="0;2" dur="3.2s" begin="0.00s" repeatCount="indefinite"/>
-          </linearGradient>
-        </defs>
-        <rect x="96" y="-9" width="339.7" height="7" rx="3.5" fill="url(#langGrad0)"/>
+        <text x="568" y="0" text-anchor="end" class="lang-percent">79.1%</text>
+        <rect x="96" y="-9" width="430" height="7" rx="3.5" fill="#171b22"/>
+        <rect x="96" y="-9" width="340.13" height="7" rx="3.5" fill="#178600" fill-opacity="0.85"/>
       </g>
       <g transform="translate(342, 125)">
         <text x="0" y="0" class="lang-label">Luau</text>
-        <text x="568" y="0" text-anchor="end" class="lang-percent">19.7%</text>
-        <rect x="96" y="-9" width="430" height="7" rx="3.5" fill="#1a2029"/>
-        <defs>
-          <linearGradient id="langGrad1" gradientUnits="objectBoundingBox" x1="-1" y1="0" x2="0" y2="0" spreadMethod="reflect">
-            <stop offset="0%" stop-color="#00A2FF"/>
-            <stop offset="50%" stop-color="#ffffff"/>
-            <stop offset="100%" stop-color="#00A2FF"/>
-            <animate attributeName="x1" values="-1;1" dur="3.2s" begin="0.22s" repeatCount="indefinite"/>
-            <animate attributeName="x2" values="0;2" dur="3.2s" begin="0.22s" repeatCount="indefinite"/>
-          </linearGradient>
-        </defs>
-        <rect x="96" y="-9" width="84.71" height="7" rx="3.5" fill="url(#langGrad1)"/>
+        <text x="568" y="0" text-anchor="end" class="lang-percent">19.8%</text>
+        <rect x="96" y="-9" width="430" height="7" rx="3.5" fill="#171b22"/>
+        <rect x="96" y="-9" width="85.14" height="7" rx="3.5" fill="#00A2FF" fill-opacity="0.85"/>
       </g>
       <g transform="translate(342, 168)">
         <text x="0" y="0" class="lang-label">HTML</text>
         <text x="568" y="0" text-anchor="end" class="lang-percent">0.7%</text>
-        <rect x="96" y="-9" width="430" height="7" rx="3.5" fill="#1a2029"/>
-        <defs>
-          <linearGradient id="langGrad2" gradientUnits="objectBoundingBox" x1="-1" y1="0" x2="0" y2="0" spreadMethod="reflect">
-            <stop offset="0%" stop-color="#e34c26"/>
-            <stop offset="50%" stop-color="#ffffff"/>
-            <stop offset="100%" stop-color="#e34c26"/>
-            <animate attributeName="x1" values="-1;1" dur="3.2s" begin="0.44s" repeatCount="indefinite"/>
-            <animate attributeName="x2" values="0;2" dur="3.2s" begin="0.44s" repeatCount="indefinite"/>
-          </linearGradient>
-        </defs>
-        <rect x="96" y="-9" width="6" height="7" rx="3.5" fill="url(#langGrad2)"/>
+        <rect x="96" y="-9" width="430" height="7" rx="3.5" fill="#171b22"/>
+        <rect x="96" y="-9" width="6" height="7" rx="3.5" fill="#e34c26" fill-opacity="0.85"/>
       </g>
       <g transform="translate(342, 211)">
         <text x="0" y="0" class="lang-label">JavaScript</text>
-        <text x="568" y="0" text-anchor="end" class="lang-percent">0.6%</text>
-        <rect x="96" y="-9" width="430" height="7" rx="3.5" fill="#1a2029"/>
-        <defs>
-          <linearGradient id="langGrad3" gradientUnits="objectBoundingBox" x1="-1" y1="0" x2="0" y2="0" spreadMethod="reflect">
-            <stop offset="0%" stop-color="#f1e05a"/>
-            <stop offset="50%" stop-color="#ffffff"/>
-            <stop offset="100%" stop-color="#f1e05a"/>
-            <animate attributeName="x1" values="-1;1" dur="3.2s" begin="0.66s" repeatCount="indefinite"/>
-            <animate attributeName="x2" values="0;2" dur="3.2s" begin="0.66s" repeatCount="indefinite"/>
-          </linearGradient>
-        </defs>
-        <rect x="96" y="-9" width="6" height="7" rx="3.5" fill="url(#langGrad3)"/>
+        <text x="568" y="0" text-anchor="end" class="lang-percent">0.5%</text>
+        <rect x="96" y="-9" width="430" height="7" rx="3.5" fill="#171b22"/>
+        <rect x="96" y="-9" width="6" height="7" rx="3.5" fill="#f1e05a" fill-opacity="0.85"/>
       </g>
 
   <!-- Repositories card -->
   <rect x="320" y="280" width="612" height="252" rx="18" class="glass"/>
-  <rect x="320" y="280" width="612" height="252" rx="18" fill="none" stroke="url(#accentGrad)" stroke-opacity="0.4" stroke-width="1" class="glow-border"/>
-  
-    <clipPath id="sweep-320-280"><rect x="320" y="280" width="612" height="252" rx="18"/></clipPath>
-    <g clip-path="url(#sweep-320-280)">
-      <rect x="200" y="280" width="120" height="252" fill="url(#sweepGrad)" class="card-sweep" style="animation-delay:3s; --sweep-dist:812px"/>
-    </g>
+  <rect x="320" y="280" width="612" height="252" rx="18" fill="none" stroke="#3b4454" stroke-width="1"/>
   <text x="342" y="312" class="section-title">Top Repositories</text>
   
       <g transform="translate(342, 334)">
-        <circle cx="4" cy="-5" r="4" fill="#178600" class="dot-pulse" style="animation-delay:0.00s"/>
+        <circle cx="4" cy="-5" r="4" fill="#178600"/>
         <text x="16" y="0" class="repo-name">DaydreamClient</text>
         <text x="568" y="0" text-anchor="end" class="repo-stars">&#9733; 2</text>
       </g>
       <g transform="translate(342, 372.4)">
-        <circle cx="4" cy="-5" r="4" fill="#178600" class="dot-pulse" style="animation-delay:0.30s"/>
+        <circle cx="4" cy="-5" r="4" fill="#178600"/>
         <text x="16" y="0" class="repo-name">BVCC</text>
         <text x="568" y="0" text-anchor="end" class="repo-stars">&#9733; 1</text>
       </g>
       <g transform="translate(342, 410.8)">
-        <circle cx="4" cy="-5" r="4" fill="#00A2FF" class="dot-pulse" style="animation-delay:0.60s"/>
+        <circle cx="4" cy="-5" r="4" fill="#00A2FF"/>
         <text x="16" y="0" class="repo-name">Screenlab</text>
         <text x="568" y="0" text-anchor="end" class="repo-stars">&#9733; 1</text>
       </g>
       <g transform="translate(342, 449.2)">
-        <circle cx="4" cy="-5" r="4" fill="#178600" class="dot-pulse" style="animation-delay:0.90s"/>
+        <circle cx="4" cy="-5" r="4" fill="#178600"/>
         <text x="16" y="0" class="repo-name">OscConnect</text>
         <text x="568" y="0" text-anchor="end" class="repo-stars">&#9733; 1</text>
       </g>
       <g transform="translate(342, 487.6)">
-        <circle cx="4" cy="-5" r="4" fill="#f1e05a" class="dot-pulse" style="animation-delay:1.20s"/>
+        <circle cx="4" cy="-5" r="4" fill="#f1e05a"/>
         <text x="16" y="0" class="repo-name">ImDragonxd07</text>
         <text x="568" y="0" text-anchor="end" class="repo-stars">&#9733; 0</text>
       </g>
