@@ -97,7 +97,7 @@
       <g transform="translate(50, 356)">
         <line x1="0" y1="38" x2="228" y2="38" stroke="#232a36" stroke-width="1"/>
         <text x="0" y="0" class="hero-stat-label">Contributions / yr</text>
-        <text x="228" y="0" text-anchor="end" class="hero-stat-value">86</text>
+        <text x="228" y="0" text-anchor="end" class="hero-stat-value">87</text>
       </g>
 
   <!-- Languages card -->
