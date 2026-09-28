@@ -107,15 +107,15 @@
   
       <g transform="translate(342, 82)">
         <text x="0" y="0" class="lang-label">C#</text>
-        <text x="568" y="0" text-anchor="end" class="lang-percent">79.1%</text>
+        <text x="568" y="0" text-anchor="end" class="lang-percent">79.2%</text>
         <rect x="96" y="-9" width="430" height="7" rx="3.5" fill="#171b22"/>
-        <rect x="96" y="-9" width="340.13" height="7" rx="3.5" fill="#7355dd" fill-opacity="0.85"/>
+        <rect x="96" y="-9" width="340.56" height="7" rx="3.5" fill="#7355dd" fill-opacity="0.85"/>
       </g>
       <g transform="translate(342, 125)">
         <text x="0" y="0" class="lang-label">Luau</text>
-        <text x="568" y="0" text-anchor="end" class="lang-percent">19.8%</text>
+        <text x="568" y="0" text-anchor="end" class="lang-percent">19.7%</text>
         <rect x="96" y="-9" width="430" height="7" rx="3.5" fill="#171b22"/>
-        <rect x="96" y="-9" width="85.14" height="7" rx="3.5" fill="#00A2FF" fill-opacity="0.85"/>
+        <rect x="96" y="-9" width="84.71" height="7" rx="3.5" fill="#00A2FF" fill-opacity="0.85"/>
       </g>
       <g transform="translate(342, 168)">
         <text x="0" y="0" class="lang-label">HTML</text>
